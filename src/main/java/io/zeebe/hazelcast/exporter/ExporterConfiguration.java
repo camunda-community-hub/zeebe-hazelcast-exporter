@@ -1,4 +1,4 @@
-package io.zeebe.exporter.hazelcast;
+package io.zeebe.hazelcast.exporter;
 
 public class ExporterConfiguration {
 
