@@ -1,0 +1,137 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<name>Zeebe Hazelcast Exporter</name>
+	<groupId>io.zeebe</groupId>
+	<artifactId>zeebe-hazelcast-exporter</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<parent>
+		<groupId>org.camunda</groupId>
+		<artifactId>camunda-release-parent</artifactId>
+		<version>2.5</version>
+		<!-- do not remove empty tag - http://jira.codehaus.org/browse/MNG-4687 -->
+		<relativePath />
+	</parent>
+
+	<properties>
+		<version.zeebe>0.14.0</version.zeebe>
+		<version.hazelcast>3.11</version.hazelcast>
+
+		<!-- release parent settings -->
+		<version.java>1.8</version.java>
+		<nexus.snapshot.repository>https://app.camunda.com/nexus/content/repositories/zeebe-io-snapshots/</nexus.snapshot.repository>
+		<nexus.release.repository>https://app.camunda.com/nexus/content/repositories/zeebe-io/</nexus.release.repository>
+
+		<!-- disable jdk8 javadoc checks on release build -->
+		<additionalparam>-Xdoclint:none</additionalparam>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>io.zeebe</groupId>
+				<artifactId>zb-bom</artifactId>
+				<version>${version.zeebe}</version>
+				<scope>import</scope>
+				<type>pom</type>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>io.zeebe</groupId>
+			<artifactId>zb-exporter-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.hazelcast</groupId>
+			<artifactId>hazelcast</artifactId>
+			<version>3.11</version>
+		</dependency>
+
+		<!-- test -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>3.10.0</version>
+			<scope>test</scope>
+		</dependency>
+		
+		  <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <version>2.11.1</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+       <version>2.11.1</version>
+      <scope>test</scope>
+    </dependency>
+
+		<dependency>
+			<groupId>io.zeebe</groupId>
+			<artifactId>zeebe-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.hazelcast</groupId>
+			<artifactId>hazelcast-client</artifactId>
+			<version>3.11</version>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+
+	<repositories>
+		<repository>
+			<id>zeebe</id>
+			<name>Zeebe Repository</name>
+			<url>https://app.camunda.com/nexus/content/repositories/zeebe-io/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+
+		<repository>
+			<id>zeebe-snapshots</id>
+			<name>Zeebe Snapshot Repository</name>
+			<url>https://app.camunda.com/nexus/content/repositories/zeebe-io-snapshots/</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
+	<scm>
+		<url>https://github.com/zeebe-io/zeebe-script-worker</url>
+		<connection>scm:git:git@github.com:zeebe-io/zeebe-script-worker.git</connection>
+		<developerConnection>scm:git:git@github.com:zeebe-io/zeebe-script-worker.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
+
+</project>
