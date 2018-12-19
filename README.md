@@ -1,2 +1,3 @@
 # zeebe-hazelcast-exporter
-Export events from Zeebe to Hazelcast
+
+![Exporter](Zeebe Hazelcast Exporter.png)
