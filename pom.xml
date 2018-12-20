@@ -3,11 +3,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
-	<name>Zeebe Hazelcast Exporter</name>
-	<groupId>io.zeebe</groupId>
-	<artifactId>zeebe-hazelcast-exporter</artifactId>
+	<name>Zeebe Hazelcast Root</name>
+	<groupId>io.zeebe.hazelcast</groupId>
+	<artifactId>root</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
-	<packaging>jar</packaging>
+	<packaging>pom</packaging>
 
 	<parent>
 		<groupId>org.camunda</groupId>
@@ -20,6 +20,7 @@
 	<properties>
 		<version.zeebe>0.14.0</version.zeebe>
 		<version.hazelcast>3.11</version.hazelcast>
+		<version.jackson>2.9.6</version.jackson>
 
 		<!-- release parent settings -->
 		<version.java>1.8</version.java>
@@ -30,8 +31,27 @@
 		<additionalparam>-Xdoclint:none</additionalparam>
 	</properties>
 
+	<modules>
+		<module>protocol</module>
+		<module>exporter</module>
+		<module>connector-java</module>
+	</modules>
+
 	<dependencyManagement>
 		<dependencies>
+
+			<dependency>
+				<groupId>io.zeebe.hazelcast</groupId>
+				<artifactId>zeebe-hazelcast-protocol</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>io.zeebe.hazelcast</groupId>
+				<artifactId>zeebe-hazelcast-exporter</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
 			<dependency>
 				<groupId>io.zeebe</groupId>
 				<artifactId>zb-bom</artifactId>
@@ -39,78 +59,58 @@
 				<scope>import</scope>
 				<type>pom</type>
 			</dependency>
+
+			<dependency>
+				<groupId>com.hazelcast</groupId>
+				<artifactId>hazelcast</artifactId>
+				<version>${version.hazelcast}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.hazelcast</groupId>
+				<artifactId>hazelcast-client</artifactId>
+				<version>${version.hazelcast}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-core</artifactId>
+				<version>${version.jackson}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
+				<version>${version.jackson}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>4.12</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.assertj</groupId>
+				<artifactId>assertj-core</artifactId>
+				<version>3.10.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-slf4j-impl</artifactId>
+				<version>2.11.1</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-core</artifactId>
+				<version>2.11.1</version>
+			</dependency>
+
+
 		</dependencies>
 	</dependencyManagement>
-
-	<dependencies>
-
-		<dependency>
-			<groupId>io.zeebe</groupId>
-			<artifactId>zb-exporter-api</artifactId>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.hazelcast</groupId>
-			<artifactId>hazelcast</artifactId>
-			<version>3.11</version>
-		</dependency>
-
-		<!-- test -->
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.12</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.assertj</groupId>
-			<artifactId>assertj-core</artifactId>
-			<version>3.10.0</version>
-			<scope>test</scope>
-		</dependency>
-		
-		  <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
-      <version>2.11.1</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-       <version>2.11.1</version>
-      <scope>test</scope>
-    </dependency>
-
-		<dependency>
-			<groupId>io.zeebe</groupId>
-			<artifactId>zeebe-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		
-		<dependency>
-			<groupId>com.hazelcast</groupId>
-			<artifactId>hazelcast-client</artifactId>
-			<version>3.11</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-core</artifactId>
-			<version>2.9.6</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>2.9.6</version>
-		</dependency>
-	</dependencies>
-
 
 	<repositories>
 		<repository>
@@ -139,9 +139,9 @@
 	</repositories>
 
 	<scm>
-		<url>https://github.com/zeebe-io/zeebe-script-worker</url>
-		<connection>scm:git:git@github.com:zeebe-io/zeebe-script-worker.git</connection>
-		<developerConnection>scm:git:git@github.com:zeebe-io/zeebe-script-worker.git</developerConnection>
+		<url>https://github.com/zeebe-io/zeebe-hazelcast-exporter</url>
+		<connection>scm:git:git@github.com:zeebe-io/zeebe-hazelcast-exporter.git</connection>
+		<developerConnection>scm:git:git@github.com:zeebe-io/zeebe-hazelcast-exporter.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 

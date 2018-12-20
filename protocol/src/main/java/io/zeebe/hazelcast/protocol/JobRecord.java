@@ -14,7 +14,7 @@ public class JobRecord extends BaseRecord implements JobEvent {
   private Map<String, Object> payload;
 
   @Override
-public String getType() {
+  public String getType() {
     return type;
   }
 
@@ -23,7 +23,7 @@ public String getType() {
   }
 
   @Override
-public String getWorker() {
+  public String getWorker() {
     return worker;
   }
 
@@ -32,7 +32,7 @@ public String getWorker() {
   }
 
   @Override
-public long getDeadline() {
+  public long getDeadline() {
     return deadline;
   }
 
@@ -41,7 +41,7 @@ public long getDeadline() {
   }
 
   @Override
-public Map<String, Object> getCustomHeaders() {
+  public Map<String, Object> getCustomHeaders() {
     return customHeaders;
   }
 
@@ -50,7 +50,7 @@ public Map<String, Object> getCustomHeaders() {
   }
 
   @Override
-public int getRetries() {
+  public int getRetries() {
     return retries;
   }
 
@@ -59,7 +59,7 @@ public int getRetries() {
   }
 
   @Override
-public String getErrorMessage() {
+  public String getErrorMessage() {
     return errorMessage;
   }
 
@@ -68,11 +68,36 @@ public String getErrorMessage() {
   }
 
   @Override
-public Map<String, Object> getPayload() {
+  public Map<String, Object> getPayload() {
     return payload;
   }
 
   public void setPayload(Map<String, Object> payload) {
     this.payload = payload;
+  }
+
+  @Override
+  public String toString() {
+    return "JobtEvent [key="
+        + getKey()
+        + ", intent="
+        + getIntent()
+        + ", timestamp="
+        + getTimestamp()
+        + ", type="
+        + type
+        + ", worker="
+        + worker
+        + ", deadline="
+        + deadline
+        + ", retries="
+        + retries
+        + ", errorMessage="
+        + errorMessage
+        + ", customHeaders="
+        + customHeaders
+        + ", payload="
+        + payload
+        + "]";
   }
 }

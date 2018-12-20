@@ -1,0 +1,3 @@
+[[exporters]]
+id = "hazelcast"
+className = "io.zeebe.hazelcast.exporter.HazelcastExporter"

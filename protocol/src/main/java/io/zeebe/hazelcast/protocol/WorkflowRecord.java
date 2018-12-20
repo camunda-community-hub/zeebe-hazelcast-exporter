@@ -10,7 +10,7 @@ public class WorkflowRecord implements WorkflowMetadata {
   private byte[] resource;
 
   @Override
-public String getBpmnProcessId() {
+  public String getBpmnProcessId() {
     return bpmnProcessId;
   }
 
@@ -19,7 +19,7 @@ public String getBpmnProcessId() {
   }
 
   @Override
-public long getWorkflowKey() {
+  public long getWorkflowKey() {
     return workflowKey;
   }
 
@@ -28,7 +28,7 @@ public long getWorkflowKey() {
   }
 
   @Override
-public int getVersion() {
+  public int getVersion() {
     return version;
   }
 
@@ -37,7 +37,7 @@ public int getVersion() {
   }
 
   @Override
-public String getResourceName() {
+  public String getResourceName() {
     return resourceName;
   }
 
@@ -46,11 +46,24 @@ public String getResourceName() {
   }
 
   @Override
-public byte[] getResource() {
+  public byte[] getResource() {
     return resource;
   }
 
   public void setResource(byte[] resource) {
     this.resource = resource;
+  }
+
+  @Override
+  public String toString() {
+    return "Workflow [bpmnProcessId="
+        + bpmnProcessId
+        + ", workflowKey="
+        + workflowKey
+        + ", version="
+        + version
+        + ", resourceName="
+        + resourceName
+        + "]";
   }
 }

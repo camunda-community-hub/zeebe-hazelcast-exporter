@@ -11,7 +11,7 @@ public class IncidentRecord extends BaseRecord implements IncidentEvent {
   private long jobKey;
 
   @Override
-public String getErrorType() {
+  public String getErrorType() {
     return errorType;
   }
 
@@ -20,7 +20,7 @@ public String getErrorType() {
   }
 
   @Override
-public String getErrorMessage() {
+  public String getErrorMessage() {
     return errorMessage;
   }
 
@@ -29,7 +29,7 @@ public String getErrorMessage() {
   }
 
   @Override
-public String getBpmnProcessId() {
+  public String getBpmnProcessId() {
     return bpmnProcessId;
   }
 
@@ -38,7 +38,7 @@ public String getBpmnProcessId() {
   }
 
   @Override
-public String getElementId() {
+  public String getElementId() {
     return elementId;
   }
 
@@ -47,7 +47,7 @@ public String getElementId() {
   }
 
   @Override
-public long getWorkflowInstanceKey() {
+  public long getWorkflowInstanceKey() {
     return workflowInstanceKey;
   }
 
@@ -56,7 +56,7 @@ public long getWorkflowInstanceKey() {
   }
 
   @Override
-public long getElementInstanceKey() {
+  public long getElementInstanceKey() {
     return elementInstanceKey;
   }
 
@@ -65,11 +65,36 @@ public long getElementInstanceKey() {
   }
 
   @Override
-public long getJobKey() {
+  public long getJobKey() {
     return jobKey;
   }
 
   public void setJobKey(long jobKey) {
     this.jobKey = jobKey;
+  }
+
+  @Override
+  public String toString() {
+    return "IncidentEvent [key="
+        + getKey()
+        + ", intent="
+        + getIntent()
+        + ", timestamp="
+        + getTimestamp()
+        + ", errorType="
+        + errorType
+        + ", errorMessage="
+        + errorMessage
+        + ", bpmnProcessId="
+        + bpmnProcessId
+        + ", elementId="
+        + elementId
+        + ", workflowInstanceKey="
+        + workflowInstanceKey
+        + ", elementInstanceKey="
+        + elementInstanceKey
+        + ", jobKey="
+        + jobKey
+        + "]";
   }
 }

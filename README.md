@@ -10,6 +10,18 @@ The exporter provides an easy way to connect multiple applications to Zeebe. For
 
 ## Java Application
 
+Add the Maven dependency to your `pom.xml`
+
+```
+<dependency>
+	<groupId>io.zeebe.hazelcast</groupId>
+	<artifactId>zeebe-hazelcast-connector</artifactId>
+	<version>%{VERSION}</version>
+</dependency>
+```
+
+Connect to Hazelcast and register a listener 
+
 ```java
 ClientConfig clientConfig = new ClientConfig();
 clientConfig.getNetworkConfig().addAddress("127.0.0.1:5701");
@@ -21,7 +33,7 @@ topic.addMessageListener(new WorkflowInstanceEventListener(event -> {
 }));
 ```
 
-# How to run
+## Exporter
 
 Before you start the broker, copy the exporter JAR  into the lib folder of the broker.
 
@@ -39,7 +51,7 @@ className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
 
 Now start the broker and the applications.
 
-# How to configure
+## Configuration
 
 In the Zeebe configuration file, you can change the topics where the events are published.
 

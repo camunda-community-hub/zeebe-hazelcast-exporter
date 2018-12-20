@@ -16,4 +16,17 @@ public class DeploymentRecord extends BaseRecord implements DeploymentEvent {
   public void setDeployedWorkflows(List<WorkflowMetadata> deployedWorkflows) {
     this.deployedWorkflows = deployedWorkflows;
   }
+
+  @Override
+  public String toString() {
+    return "DeploymentEvent [key="
+        + getKey()
+        + ", intent="
+        + getIntent()
+        + ", timestamp="
+        + getTimestamp()
+        + ", deployedWorkflows="
+        + deployedWorkflows
+        + "]";
+  }
 }

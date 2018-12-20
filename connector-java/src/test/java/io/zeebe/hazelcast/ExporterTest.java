@@ -64,25 +64,6 @@ public class ExporterTest {
   }
 
   @Test
-  public void shouldExportEventsAsJson() {
-    final List<String> messages = new ArrayList<>();
-
-    final ITopic<String> topic = hz.getTopic(CONFIGURATION.deploymentTopic);
-    topic.addMessageListener(m -> messages.add(m.getMessageObject()));
-
-    client
-        .workflowClient()
-        .newDeployCommand()
-        .addWorkflowModel(WORKFLOW, "process.bpmn")
-        .send()
-        .join();
-
-    TestUtil.waitUntil(() -> messages.size() > 0);
-
-    assertThat(messages.get(0)).startsWith("{").endsWith("}");
-  }
-
-  @Test
   public void shouldExportWorkflowInstanceEvents() {
     final List<WorkflowInstanceEvent> events = new ArrayList<>();
 

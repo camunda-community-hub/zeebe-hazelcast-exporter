@@ -2,6 +2,7 @@ package io.zeebe.hazelcast.exporter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
@@ -69,7 +70,10 @@ public class HazelcastExporter implements Exporter {
   public void open(Controller controller) {
     this.controller = controller;
 
-    hz = Hazelcast.newHazelcastInstance();
+    final Config cfg = new Config();
+    cfg.setProperty("hazelcast.logging.type", "slf4j");
+
+    hz = Hazelcast.newHazelcastInstance(cfg);
 
     topics.put(ValueType.DEPLOYMENT, hz.getTopic(config.deploymentTopic));
     topics.put(ValueType.WORKFLOW_INSTANCE, hz.getTopic(config.workflowInstanceTopic));

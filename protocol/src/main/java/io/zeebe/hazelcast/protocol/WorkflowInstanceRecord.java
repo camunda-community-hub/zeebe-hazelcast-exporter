@@ -13,7 +13,7 @@ public class WorkflowInstanceRecord extends BaseRecord implements WorkflowInstan
   private Map<String, Object> payload;
 
   @Override
-public String getBpmnProcessId() {
+  public String getBpmnProcessId() {
     return bpmnProcessId;
   }
 
@@ -22,7 +22,7 @@ public String getBpmnProcessId() {
   }
 
   @Override
-public String getElementId() {
+  public String getElementId() {
     return elementId;
   }
 
@@ -31,7 +31,7 @@ public String getElementId() {
   }
 
   @Override
-public int getVersion() {
+  public int getVersion() {
     return version;
   }
 
@@ -40,7 +40,7 @@ public int getVersion() {
   }
 
   @Override
-public long getWorkflowKey() {
+  public long getWorkflowKey() {
     return workflowKey;
   }
 
@@ -49,7 +49,7 @@ public long getWorkflowKey() {
   }
 
   @Override
-public long getWorkflowInstanceKey() {
+  public long getWorkflowInstanceKey() {
     return workflowInstanceKey;
   }
 
@@ -58,7 +58,7 @@ public long getWorkflowInstanceKey() {
   }
 
   @Override
-public long getScopeInstanceKey() {
+  public long getScopeInstanceKey() {
     return scopeInstanceKey;
   }
 
@@ -67,11 +67,36 @@ public long getScopeInstanceKey() {
   }
 
   @Override
-public Map<String, Object> getPayload() {
+  public Map<String, Object> getPayload() {
     return payload;
   }
 
   public void setPayload(Map<String, Object> payload) {
     this.payload = payload;
+  }
+
+  @Override
+  public String toString() {
+    return "WorkflowInstanceEvent [key="
+        + getKey()
+        + ", intent="
+        + getIntent()
+        + ", timestamp="
+        + getTimestamp()
+        + ", bpmnProcessId="
+        + bpmnProcessId
+        + ", elementId="
+        + elementId
+        + ", version="
+        + version
+        + ", workflowKey="
+        + workflowKey
+        + ", workflowInstanceKey="
+        + workflowInstanceKey
+        + ", scopeInstanceKey="
+        + scopeInstanceKey
+        + ", payload="
+        + payload
+        + "]";
   }
 }
