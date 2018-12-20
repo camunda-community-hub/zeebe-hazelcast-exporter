@@ -6,9 +6,9 @@ Export events from [Zeebe](https://github.com/zeebe-io/zeebe) to [Hazelcast](htt
 
 The exporter provides an easy way to connect multiple applications to Zeebe. For example, an application can use the exporter to send a notification when a new incident is created. Without the exporter, the application needs to implement its own exporter. 
 
-# Usage
+## Usage
 
-## Java Application
+### Java Application
 
 Add the Maven dependency to your `pom.xml`
 
@@ -33,7 +33,7 @@ topic.addMessageListener(new WorkflowInstanceEventListener(event -> {
 }));
 ```
 
-## Exporter
+### Exporter
 
 Before you start the broker, copy the exporter JAR  into the lib folder of the broker.
 
@@ -51,7 +51,7 @@ className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
 
 Now start the broker and the applications.
 
-## Configuration
+### Configuration
 
 In the Zeebe configuration file, you can change the topics where the events are published.
 
@@ -66,9 +66,15 @@ jobTopic = "zeebe-jobs"
 incidentTopic = "zeebe-incidents"
 ```
 
-# How to build
+## How to build
 
 Build with Maven
 
 `mvn clean install`
 
+## Code of Conduct
+
+This project adheres to the Contributor Covenant [Code of
+Conduct](/CODE_OF_CONDUCT.md). By participating, you are expected to uphold
+this code. Please report unacceptable behavior to
+code-of-conduct@zeebe.io.
