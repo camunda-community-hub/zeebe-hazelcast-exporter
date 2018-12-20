@@ -9,29 +9,59 @@ import io.zeebe.exporter.context.Context;
 import io.zeebe.exporter.context.Controller;
 import io.zeebe.exporter.record.Record;
 import io.zeebe.exporter.record.RecordMetadata;
+import io.zeebe.exporter.record.RecordValue;
+import io.zeebe.exporter.record.value.DeploymentRecordValue;
+import io.zeebe.exporter.record.value.IncidentRecordValue;
+import io.zeebe.exporter.record.value.JobRecordValue;
 import io.zeebe.exporter.record.value.WorkflowInstanceRecordValue;
+import io.zeebe.exporter.record.value.deployment.DeploymentResource;
 import io.zeebe.exporter.spi.Exporter;
 import io.zeebe.hazelcast.protocol.BaseRecord;
+import io.zeebe.hazelcast.protocol.DeploymentRecord;
+import io.zeebe.hazelcast.protocol.IncidentRecord;
+import io.zeebe.hazelcast.protocol.JobRecord;
 import io.zeebe.hazelcast.protocol.WorkflowInstanceRecord;
+import io.zeebe.hazelcast.protocol.WorkflowRecord;
 import io.zeebe.protocol.clientapi.RecordType;
 import io.zeebe.protocol.clientapi.ValueType;
+import java.time.Instant;
 import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
 
 public class HazelcastExporter implements Exporter {
 
+  private static final EnumMap<ValueType, Function<RecordValue, BaseRecord>> TRANSFORMERS =
+      new EnumMap<>(ValueType.class);
+
+  static {
+    TRANSFORMERS.put(
+        ValueType.WORKFLOW_INSTANCE,
+        v -> transformWorkflowInstance((WorkflowInstanceRecordValue) v));
+    TRANSFORMERS.put(ValueType.JOB, v -> transformJob((JobRecordValue) v));
+    TRANSFORMERS.put(ValueType.INCIDENT, v -> transformIncident((IncidentRecordValue) v));
+    TRANSFORMERS.put(ValueType.DEPLOYMENT, v -> transformDeployment((DeploymentRecordValue) v));
+  }
+
   private final EnumMap<ValueType, ITopic<String>> topics = new EnumMap<>(ValueType.class);
 
+  private final ObjectMapper objectMapper = new ObjectMapper();
+
   private ExporterConfiguration config;
+  private Logger logger;
   private Controller controller;
 
   private HazelcastInstance hz;
-  private final ObjectMapper objectMapper = new ObjectMapper();
 
   @Override
   public void configure(Context context) {
+    logger = context.getLogger();
     config = context.getConfiguration().instantiate(ExporterConfiguration.class);
 
-    context.getLogger().debug("Starting exporter with configuration: {}", config);
+    logger.debug("Starting exporter with configuration: {}", config);
   }
 
   @Override
@@ -54,53 +84,114 @@ public class HazelcastExporter implements Exporter {
   @Override
   public void export(Record record) {
     final RecordMetadata metadata = record.getMetadata();
+    final ValueType valueType = metadata.getValueType();
 
     if (metadata.getRecordType() == RecordType.EVENT) {
-      final ITopic<String> topic = topics.get(metadata.getValueType());
-      if (topic != null) {
 
-        final BaseRecord dto = transform(record);
-        if (dto != null) {
+      final ITopic<String> topic = topics.get(valueType);
+      final Function<RecordValue, BaseRecord> transformer =
+          TRANSFORMERS.get(metadata.getValueType());
 
-          try {
-            final String json = objectMapper.writeValueAsString(dto);
-            topic.publish(json);
+      if (topic != null && transformer != null) {
 
-          } catch (JsonProcessingException e) {
-            e.printStackTrace();
-          }
-        }
+        final String json = transformRecord(record, transformer);
+        topic.publish(json);
       }
     }
 
     controller.updateLastExportedRecordPosition(record.getPosition());
   }
 
-  @SuppressWarnings("unchecked")
-  private BaseRecord transform(Record<?> record) {
-    switch (record.getMetadata().getValueType()) {
-      case WORKFLOW_INSTANCE:
-        return transformWorkflowInstance((Record<WorkflowInstanceRecordValue>) record);
-      default:
-        return null;
+  private String transformRecord(
+      Record record, final Function<RecordValue, BaseRecord> transformer) {
+    final BaseRecord dto = transformer.apply(record.getValue());
+    transformMetadata(record, dto);
+
+    try {
+      return objectMapper.writeValueAsString(dto);
+
+    } catch (JsonProcessingException e) {
+      logger.error("Fail to transform record to JSON", e);
+
+      throw new RuntimeException("Hazelcast exporter: fail to transform record", e);
     }
   }
 
   private static WorkflowInstanceRecord transformWorkflowInstance(
-      Record<WorkflowInstanceRecordValue> record) {
-    final WorkflowInstanceRecord dto = new WorkflowInstanceRecord();
+      WorkflowInstanceRecordValue value) {
+    final WorkflowInstanceRecord record = new WorkflowInstanceRecord();
+    record.setBpmnProcessId(value.getBpmnProcessId());
+    record.setVersion(value.getVersion());
+    record.setWorkflowKey(value.getWorkflowKey());
+    record.setWorkflowInstanceKey(value.getWorkflowInstanceKey());
+    record.setElementId(value.getElementId());
+    record.setScopeInstanceKey(value.getScopeInstanceKey());
+    record.setPayload(value.getPayloadAsMap());
+    return record;
+  }
+
+  private static IncidentRecord transformIncident(IncidentRecordValue incident) {
+    final IncidentRecord record = new IncidentRecord();
+    record.setErrorType(incident.getErrorType());
+    record.setErrorMessage(incident.getErrorMessage());
+    record.setWorkflowInstanceKey(incident.getWorkflowInstanceKey());
+    record.setElementInstanceKey(incident.getElementInstanceKey());
+    record.setElementId(incident.getElementId());
+    record.setJobKey(incident.getJobKey());
+    return record;
+  }
+
+  private static DeploymentRecord transformDeployment(DeploymentRecordValue deployment) {
+    final DeploymentRecord record = new DeploymentRecord();
+
+    final Map<String, byte[]> resourcesByName =
+        deployment
+            .getResources()
+            .stream()
+            .collect(
+                Collectors.toMap(
+                    DeploymentResource::getResourceName, DeploymentResource::getResource));
+
+    final List<WorkflowRecord> workflowRecords =
+        deployment
+            .getDeployedWorkflows()
+            .stream()
+            .map(
+                w -> {
+                  final WorkflowRecord workflowRecord = new WorkflowRecord();
+                  workflowRecord.setBpmnProcessId(w.getBpmnProcessId());
+                  workflowRecord.setVersion(w.getVersion());
+                  workflowRecord.setWorkflowKey(w.getWorkflowKey());
+                  workflowRecord.setResourceName(w.getResourceName());
+                  workflowRecord.setResource(resourcesByName.get(w.getResourceName()));
+                  return workflowRecord;
+                })
+            .collect(Collectors.toList());
+    record.setDeployedWorkflows(workflowRecords);
+
+    return record;
+  }
+
+  private static JobRecord transformJob(JobRecordValue job) {
+    final JobRecord record = new JobRecord();
+    record.setType(job.getType());
+    record.setWorker(job.getWorker());
+    record.setRetries(job.getRetries());
+    record.setErrorMessage(job.getErrorMessage());
+    record.setCustomHeaders(job.getCustomHeaders());
+    record.setPayload(job.getPayloadAsMap());
+
+    final Instant deadline = job.getDeadline();
+    if (deadline != null) {
+      record.setDeadline(deadline.toEpochMilli());
+    }
+
+    return record;
+  }
+
+  private static void transformMetadata(Record<?> record, final BaseRecord dto) {
     dto.setKey(record.getKey());
     dto.setIntent(record.getMetadata().getIntent().name());
     dto.setTimestamp(record.getTimestamp().toEpochMilli());
-
-    final WorkflowInstanceRecordValue value = record.getValue();
-    dto.setBpmnProcessId(value.getBpmnProcessId());
-    dto.setVersion(value.getVersion());
-    dto.setWorkflowKey(value.getWorkflowKey());
-    dto.setWorkflowInstanceKey(value.getWorkflowInstanceKey());
-    dto.setElementId(value.getElementId());
-    dto.setScopeInstanceKey(value.getScopeInstanceKey());
-    dto.setPayload(value.getPayloadAsMap());
-    return dto;
   }
 }
