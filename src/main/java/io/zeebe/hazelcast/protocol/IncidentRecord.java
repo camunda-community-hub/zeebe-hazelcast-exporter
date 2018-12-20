@@ -1,6 +1,6 @@
 package io.zeebe.hazelcast.protocol;
 
-public class IncidentRecord extends BaseRecord {
+public class IncidentRecord extends BaseRecord implements IncidentEvent {
 
   private String errorType;
   private String errorMessage;
@@ -10,7 +10,8 @@ public class IncidentRecord extends BaseRecord {
   private long elementInstanceKey;
   private long jobKey;
 
-  public String getErrorType() {
+  @Override
+public String getErrorType() {
     return errorType;
   }
 
@@ -18,7 +19,8 @@ public class IncidentRecord extends BaseRecord {
     this.errorType = errorType;
   }
 
-  public String getErrorMessage() {
+  @Override
+public String getErrorMessage() {
     return errorMessage;
   }
 
@@ -26,7 +28,8 @@ public class IncidentRecord extends BaseRecord {
     this.errorMessage = errorMessage;
   }
 
-  public String getBpmnProcessId() {
+  @Override
+public String getBpmnProcessId() {
     return bpmnProcessId;
   }
 
@@ -34,7 +37,8 @@ public class IncidentRecord extends BaseRecord {
     this.bpmnProcessId = bpmnProcessId;
   }
 
-  public String getElementId() {
+  @Override
+public String getElementId() {
     return elementId;
   }
 
@@ -42,7 +46,8 @@ public class IncidentRecord extends BaseRecord {
     this.elementId = elementId;
   }
 
-  public long getWorkflowInstanceKey() {
+  @Override
+public long getWorkflowInstanceKey() {
     return workflowInstanceKey;
   }
 
@@ -50,7 +55,8 @@ public class IncidentRecord extends BaseRecord {
     this.workflowInstanceKey = workflowInstanceKey;
   }
 
-  public long getElementInstanceKey() {
+  @Override
+public long getElementInstanceKey() {
     return elementInstanceKey;
   }
 
@@ -58,7 +64,8 @@ public class IncidentRecord extends BaseRecord {
     this.elementInstanceKey = elementInstanceKey;
   }
 
-  public long getJobKey() {
+  @Override
+public long getJobKey() {
     return jobKey;
   }
 

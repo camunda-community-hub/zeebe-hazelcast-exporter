@@ -1,6 +1,6 @@
 package io.zeebe.hazelcast.protocol;
 
-public class WorkflowRecord {
+public class WorkflowRecord implements WorkflowMetadata {
 
   private String bpmnProcessId;
   private long workflowKey;
@@ -9,7 +9,8 @@ public class WorkflowRecord {
   private String resourceName;
   private byte[] resource;
 
-  public String getBpmnProcessId() {
+  @Override
+public String getBpmnProcessId() {
     return bpmnProcessId;
   }
 
@@ -17,7 +18,8 @@ public class WorkflowRecord {
     this.bpmnProcessId = bpmnProcessId;
   }
 
-  public long getWorkflowKey() {
+  @Override
+public long getWorkflowKey() {
     return workflowKey;
   }
 
@@ -25,7 +27,8 @@ public class WorkflowRecord {
     this.workflowKey = workflowKey;
   }
 
-  public int getVersion() {
+  @Override
+public int getVersion() {
     return version;
   }
 
@@ -33,7 +36,8 @@ public class WorkflowRecord {
     this.version = version;
   }
 
-  public String getResourceName() {
+  @Override
+public String getResourceName() {
     return resourceName;
   }
 
@@ -41,7 +45,8 @@ public class WorkflowRecord {
     this.resourceName = resourceName;
   }
 
-  public byte[] getResource() {
+  @Override
+public byte[] getResource() {
     return resource;
   }
 

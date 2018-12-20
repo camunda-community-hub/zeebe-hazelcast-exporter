@@ -2,7 +2,7 @@ package io.zeebe.hazelcast.protocol;
 
 import java.util.Map;
 
-public class WorkflowInstanceRecord extends BaseRecord {
+public class WorkflowInstanceRecord extends BaseRecord implements WorkflowInstanceEvent {
 
   private String bpmnProcessId;
   private String elementId;
@@ -12,7 +12,8 @@ public class WorkflowInstanceRecord extends BaseRecord {
   private long scopeInstanceKey;
   private Map<String, Object> payload;
 
-  public String getBpmnProcessId() {
+  @Override
+public String getBpmnProcessId() {
     return bpmnProcessId;
   }
 
@@ -20,7 +21,8 @@ public class WorkflowInstanceRecord extends BaseRecord {
     this.bpmnProcessId = bpmnProcessId;
   }
 
-  public String getElementId() {
+  @Override
+public String getElementId() {
     return elementId;
   }
 
@@ -28,7 +30,8 @@ public class WorkflowInstanceRecord extends BaseRecord {
     this.elementId = elementId;
   }
 
-  public int getVersion() {
+  @Override
+public int getVersion() {
     return version;
   }
 
@@ -36,7 +39,8 @@ public class WorkflowInstanceRecord extends BaseRecord {
     this.version = version;
   }
 
-  public long getWorkflowKey() {
+  @Override
+public long getWorkflowKey() {
     return workflowKey;
   }
 
@@ -44,7 +48,8 @@ public class WorkflowInstanceRecord extends BaseRecord {
     this.workflowKey = workflowKey;
   }
 
-  public long getWorkflowInstanceKey() {
+  @Override
+public long getWorkflowInstanceKey() {
     return workflowInstanceKey;
   }
 
@@ -52,7 +57,8 @@ public class WorkflowInstanceRecord extends BaseRecord {
     this.workflowInstanceKey = workflowInstanceKey;
   }
 
-  public long getScopeInstanceKey() {
+  @Override
+public long getScopeInstanceKey() {
     return scopeInstanceKey;
   }
 
@@ -60,7 +66,8 @@ public class WorkflowInstanceRecord extends BaseRecord {
     this.scopeInstanceKey = scopeInstanceKey;
   }
 
-  public Map<String, Object> getPayload() {
+  @Override
+public Map<String, Object> getPayload() {
     return payload;
   }
 

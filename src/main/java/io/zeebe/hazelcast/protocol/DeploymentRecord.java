@@ -1,16 +1,19 @@
 package io.zeebe.hazelcast.protocol;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
 
-public class DeploymentRecord extends BaseRecord {
+public class DeploymentRecord extends BaseRecord implements DeploymentEvent {
 
-  private List<WorkflowRecord> deployedWorkflows;
+  @JsonDeserialize(contentAs = WorkflowRecord.class)
+  private List<WorkflowMetadata> deployedWorkflows;
 
-  public List<WorkflowRecord> getDeployedWorkflows() {
+  @Override
+  public List<WorkflowMetadata> getDeployedWorkflows() {
     return deployedWorkflows;
   }
 
-  public void setDeployedWorkflows(List<WorkflowRecord> deployedWorkflows) {
+  public void setDeployedWorkflows(List<WorkflowMetadata> deployedWorkflows) {
     this.deployedWorkflows = deployedWorkflows;
   }
 }

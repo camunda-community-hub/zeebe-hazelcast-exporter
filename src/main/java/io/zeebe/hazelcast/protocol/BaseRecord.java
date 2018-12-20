@@ -1,12 +1,13 @@
 package io.zeebe.hazelcast.protocol;
 
-public abstract class BaseRecord {
+public abstract class BaseRecord implements ZeebeEvent {
 
   private long key;
   private long timestamp;
   private String intent;
 
-  public long getKey() {
+  @Override
+public long getKey() {
     return key;
   }
 
@@ -14,7 +15,8 @@ public abstract class BaseRecord {
     this.key = key;
   }
 
-  public long getTimestamp() {
+  @Override
+public long getTimestamp() {
     return timestamp;
   }
 
@@ -22,6 +24,7 @@ public abstract class BaseRecord {
     this.timestamp = timestamp;
   }
 
+@Override
 public String getIntent(){return intent;}
 
 public void setIntent(String intent){this.intent = intent;}

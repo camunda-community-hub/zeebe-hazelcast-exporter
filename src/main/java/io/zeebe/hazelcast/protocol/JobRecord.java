@@ -2,7 +2,7 @@ package io.zeebe.hazelcast.protocol;
 
 import java.util.Map;
 
-public class JobRecord extends BaseRecord {
+public class JobRecord extends BaseRecord implements JobEvent {
 
   private String type;
   private String worker;
@@ -13,7 +13,8 @@ public class JobRecord extends BaseRecord {
   private Map<String, Object> customHeaders;
   private Map<String, Object> payload;
 
-  public String getType() {
+  @Override
+public String getType() {
     return type;
   }
 
@@ -21,7 +22,8 @@ public class JobRecord extends BaseRecord {
     this.type = type;
   }
 
-  public String getWorker() {
+  @Override
+public String getWorker() {
     return worker;
   }
 
@@ -29,7 +31,8 @@ public class JobRecord extends BaseRecord {
     this.worker = worker;
   }
 
-  public long getDeadline() {
+  @Override
+public long getDeadline() {
     return deadline;
   }
 
@@ -37,7 +40,8 @@ public class JobRecord extends BaseRecord {
     this.deadline = deadline;
   }
 
-  public Map<String, Object> getCustomHeaders() {
+  @Override
+public Map<String, Object> getCustomHeaders() {
     return customHeaders;
   }
 
@@ -45,7 +49,8 @@ public class JobRecord extends BaseRecord {
     this.customHeaders = customHeaders;
   }
 
-  public int getRetries() {
+  @Override
+public int getRetries() {
     return retries;
   }
 
@@ -53,7 +58,8 @@ public class JobRecord extends BaseRecord {
     this.retries = retries;
   }
 
-  public String getErrorMessage() {
+  @Override
+public String getErrorMessage() {
     return errorMessage;
   }
 
@@ -61,7 +67,8 @@ public class JobRecord extends BaseRecord {
     this.errorMessage = errorMessage;
   }
 
-  public Map<String, Object> getPayload() {
+  @Override
+public Map<String, Object> getPayload() {
     return payload;
   }
 

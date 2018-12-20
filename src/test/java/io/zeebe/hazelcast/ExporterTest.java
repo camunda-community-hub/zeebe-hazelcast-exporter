@@ -13,10 +13,10 @@ import io.zeebe.hazelcast.connect.java.IncidentEventListener;
 import io.zeebe.hazelcast.connect.java.JobEventListener;
 import io.zeebe.hazelcast.connect.java.WorkflowInstanceEventListener;
 import io.zeebe.hazelcast.exporter.ExporterConfiguration;
-import io.zeebe.hazelcast.protocol.DeploymentRecord;
-import io.zeebe.hazelcast.protocol.IncidentRecord;
-import io.zeebe.hazelcast.protocol.JobRecord;
-import io.zeebe.hazelcast.protocol.WorkflowInstanceRecord;
+import io.zeebe.hazelcast.protocol.DeploymentEvent;
+import io.zeebe.hazelcast.protocol.IncidentEvent;
+import io.zeebe.hazelcast.protocol.JobEvent;
+import io.zeebe.hazelcast.protocol.WorkflowInstanceEvent;
 import io.zeebe.model.bpmn.Bpmn;
 import io.zeebe.model.bpmn.BpmnModelInstance;
 import io.zeebe.test.ZeebeTestRule;
@@ -84,7 +84,7 @@ public class ExporterTest {
 
   @Test
   public void shouldExportWorkflowInstanceEvents() {
-    final List<WorkflowInstanceRecord> events = new ArrayList<>();
+    final List<WorkflowInstanceEvent> events = new ArrayList<>();
 
     final ITopic<String> topic = hz.getTopic(CONFIGURATION.workflowInstanceTopic);
     topic.addMessageListener(new WorkflowInstanceEventListener(events::add));
@@ -117,7 +117,7 @@ public class ExporterTest {
 
   @Test
   public void shouldExportDeploymentEvents() {
-    final List<DeploymentRecord> events = new ArrayList<>();
+    final List<DeploymentEvent> events = new ArrayList<>();
 
     final ITopic<String> topic = hz.getTopic(CONFIGURATION.deploymentTopic);
     topic.addMessageListener(new DeploymentEventListener(events::add));
@@ -139,7 +139,7 @@ public class ExporterTest {
 
   @Test
   public void shouldExportJobEvents() {
-    final List<JobRecord> events = new ArrayList<>();
+    final List<JobEvent> events = new ArrayList<>();
 
     final ITopic<String> topic = hz.getTopic(CONFIGURATION.jobTopic);
     topic.addMessageListener(new JobEventListener(events::add));
@@ -167,7 +167,7 @@ public class ExporterTest {
 
   @Test
   public void shouldExportIncidentEvents() {
-    final List<IncidentRecord> events = new ArrayList<>();
+    final List<IncidentEvent> events = new ArrayList<>();
 
     final ITopic<String> topic = hz.getTopic(CONFIGURATION.incidentTopic);
     topic.addMessageListener(new IncidentEventListener(events::add));

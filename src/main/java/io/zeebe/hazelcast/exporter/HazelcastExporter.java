@@ -21,6 +21,7 @@ import io.zeebe.hazelcast.protocol.DeploymentRecord;
 import io.zeebe.hazelcast.protocol.IncidentRecord;
 import io.zeebe.hazelcast.protocol.JobRecord;
 import io.zeebe.hazelcast.protocol.WorkflowInstanceRecord;
+import io.zeebe.hazelcast.protocol.WorkflowMetadata;
 import io.zeebe.hazelcast.protocol.WorkflowRecord;
 import io.zeebe.protocol.clientapi.RecordType;
 import io.zeebe.protocol.clientapi.ValueType;
@@ -152,7 +153,7 @@ public class HazelcastExporter implements Exporter {
                 Collectors.toMap(
                     DeploymentResource::getResourceName, DeploymentResource::getResource));
 
-    final List<WorkflowRecord> workflowRecords =
+    final List<WorkflowMetadata> workflowRecords =
         deployment
             .getDeployedWorkflows()
             .stream()
