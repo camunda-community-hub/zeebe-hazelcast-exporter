@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{B027E8AB-3BBD-4BFF-B835-63543FBF4DC5}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Connector</RootNamespace>
+    <AssemblyName>Connector</AssemblyName>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <StartupObject>Connector.Zeebe.Hazelcast.Connector.ConnectorMain</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Hazelcast.Net, Version=3.10.0.0, Culture=neutral, PublicKeyToken=696d29173d68bfe5, processorArchitecture=MSIL">
+      <HintPath>..\packages\Hazelcast.Net.3.10.0\lib\net40\Hazelcast.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Google.Protobuf">
+      <HintPath>..\packages\Google.Protobuf.3.6.1\lib\net45\Google.Protobuf.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Zeebe\Hazelcast\Connector\DeploymentListener.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Zeebe\Hazelcast\Connector\ConnectorMain.cs" />
+    <Compile Include="Zeebe\Hazelcast\Connector\Schema.cs" />
+    <Compile Include="Zeebe\Hazelcast\Connector\JobListener.cs" />
+    <Compile Include="Zeebe\Hazelcast\Connector\IncidentListener.cs" />
+    <Compile Include="Zeebe\Hazelcast\Connector\MessageListener.cs" />
+    <Compile Include="Zeebe\Hazelcast\Connector\WorkflowInstanceListener.cs" />
+    <Compile Include="Zeebe\Hazelcast\Connector\TimerListener.cs" />
+    <Compile Include="Zeebe\Hazelcast\Connector\MessageSubscriptionListener.cs" />
+    <Compile Include="Zeebe\Hazelcast\Connector\WorkflowSubscriptionListener.cs" />
+    <Compile Include="Zeebe\Hazelcast\Connector\JobBatchListener.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

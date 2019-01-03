@@ -29,4 +29,7 @@ hs_err_pid*
 # intellij
 .idea
 *.iml
-/bin/
+bin/
+packages/
+*.userprefs
+obj/
