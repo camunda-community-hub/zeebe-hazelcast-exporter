@@ -1,0 +1,168 @@
+syntax = 'proto3';
+package exporter_protocol;
+
+option java_multiple_files = false;
+option java_package = "io.zeebe.exporter.proto";
+
+// Makes use of so called "well known types". Arguable if it's a good idea
+// see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+// Convenience message for systems which use a key/id system for each record
+message RecordId {
+    int32 partitionId = 1;
+    int64 position = 2;
+}
+
+// Packs all non-value info into a single field; the idea here is so we can embed the *Record messages into other
+// messages (e.g. JobRecord and JobBatchRecord) by simply omitting the optional metadata field, but by setting it the
+// message becomes a full fledged record. Also cuts down how much properties need to be duplicated if we want to have
+// flat records.
+message RecordMetadata {
+    int32 partitionId = 1;
+    int64 position = 2;
+    int32 raftTerm = 3;
+    int64 key = 4;
+    google.protobuf.Timestamp timestamp = 5;
+
+    string recordType = 6;
+    string intent = 7;
+    string valueType = 8;
+    int64 sourceRecordPosition = 9;
+    int32 producerId = 10;
+
+    string rejectionType = 11;
+    string rejectionReason = 12;
+}
+
+message DeploymentRecord {
+    message Resource {
+        bytes resource = 1;
+        string resourceType = 2;
+        string resourceName = 3;
+    }
+
+    message Workflow {
+        string bpmnProcessId = 1;
+        int32 version = 2;
+        int64 workflowKey = 3;
+        string resourceName = 5;
+    }
+
+    RecordMetadata metadata = 1;
+    repeated Resource resources = 2;
+    repeated Workflow workflows = 3;
+}
+
+message IncidentRecord {
+    RecordMetadata metadata = 1;
+
+    string errorType = 2;
+    string errorMessage = 3;
+    string bpmnProcessId = 4;
+    int64 workflowInstanceKey = 5;
+    string elementId = 6;
+    int64 elementInstanceKey = 7;
+    int64 jobKey = 8;
+}
+
+message JobRecord {
+    message Headers {
+        string elementId = 1;
+        int64 elementInstanceKey = 2;
+        string bpmnProcessId = 3;
+        int32 workflowDefinitionVersion = 4;
+        int64 workflowInstanceKey = 5;
+        int64 workflowKey = 6;
+    }
+
+    RecordMetadata metadata = 1;
+
+    string type = 2;
+    Headers headers = 3;
+    google.protobuf.Struct customHeaders = 4;
+    string worker = 5;
+    int32 retries = 6;
+    google.protobuf.Timestamp deadline = 7;
+    string errorMessage = 8;
+    google.protobuf.Struct payload = 9;
+}
+
+message JobBatchRecord {
+    RecordMetadata metadata = 1;
+
+    string type = 2;
+    string worker = 3;
+    int64 timeout = 4;
+    int32 amount = 5;
+    repeated int64 jobKeys = 6;
+    repeated JobRecord jobs = 7;
+}
+
+message MessageRecord {
+    RecordMetadata metadata = 1;
+
+    string name = 2;
+    string correlationKey = 3;
+    string messageId = 4;
+    int64 timeToLive = 5;
+    google.protobuf.Struct payload = 6;
+}
+
+message MessageSubscriptionRecord {
+    RecordMetadata metadata = 1;
+
+    int64 workflowInstanceKey = 2;
+    int64 elementInstanceKey = 3;
+    string messageName = 4;
+    string correlationKey = 5;
+}
+
+message MessageStartEventSubscriptionRecord {
+    RecordMetadata metadata = 1;
+
+    int64 workflowKey = 2;
+    string startEventId = 3;
+    string messageName = 4;
+}
+
+// could be flattened
+message RaftRecord {
+    message Member {
+        int32 nodeId = 1;
+    }
+
+    RecordMetadata metadata = 1;
+    repeated Member members = 2;
+}
+
+message TimerRecord {
+    RecordMetadata metadata = 1;
+
+    int64 elementInstanceKey = 2;
+    int64 dueDate = 3;
+    string handlerFlowNodeId = 4;
+}
+
+message WorkflowInstanceRecord {
+    RecordMetadata metadata = 1;
+
+    string bpmnProcessId = 2;
+    int32 version = 3;
+    int64 workflowKey = 4;
+    int64 workflowInstanceKey = 5;
+    string elementId = 6;
+    int64 scopeInstanceKey = 7;
+    google.protobuf.Struct payload = 8;
+}
+
+message WorkflowInstanceSubscriptionRecord {
+    RecordMetadata metadata = 1;
+
+    int64 workflowInstanceKey = 2;
+    int64 elementInstanceKey = 3;
+    string messageName = 4;
+    google.protobuf.Struct payload = 5;
+}
