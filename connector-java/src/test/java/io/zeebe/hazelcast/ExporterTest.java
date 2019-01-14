@@ -3,28 +3,26 @@ package io.zeebe.hazelcast;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
 import io.zeebe.client.ZeebeClient;
+import io.zeebe.exporter.proto.Schema;
 import io.zeebe.hazelcast.connect.java.DeploymentEventListener;
 import io.zeebe.hazelcast.connect.java.IncidentEventListener;
 import io.zeebe.hazelcast.connect.java.JobEventListener;
 import io.zeebe.hazelcast.connect.java.WorkflowInstanceEventListener;
 import io.zeebe.hazelcast.exporter.ExporterConfiguration;
-import io.zeebe.hazelcast.protocol.DeploymentEvent;
-import io.zeebe.hazelcast.protocol.IncidentEvent;
-import io.zeebe.hazelcast.protocol.JobEvent;
-import io.zeebe.hazelcast.protocol.WorkflowInstanceEvent;
 import io.zeebe.model.bpmn.Bpmn;
 import io.zeebe.model.bpmn.BpmnModelInstance;
 import io.zeebe.test.ZeebeTestRule;
 import io.zeebe.test.util.TestUtil;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -65,9 +63,9 @@ public class ExporterTest {
 
   @Test
   public void shouldExportWorkflowInstanceEvents() {
-    final List<WorkflowInstanceEvent> events = new ArrayList<>();
+    final List<Schema.WorkflowInstanceRecord> events = new ArrayList<>();
 
-    final ITopic<String> topic = hz.getTopic(CONFIGURATION.workflowInstanceTopic);
+    final ITopic<byte[]> topic = hz.getTopic(CONFIGURATION.workflowInstanceTopic);
     topic.addMessageListener(new WorkflowInstanceEventListener(events::add));
 
     client
@@ -88,7 +86,7 @@ public class ExporterTest {
     TestUtil.waitUntil(() -> events.size() >= 4);
 
     assertThat(events)
-        .extracting(r -> tuple(r.getElementId(), r.getIntent()))
+        .extracting(r -> tuple(r.getElementId(), r.getMetadata().getIntent()))
         .containsSequence(
             tuple("process", "ELEMENT_READY"),
             tuple("process", "ELEMENT_ACTIVATED"),
@@ -98,9 +96,9 @@ public class ExporterTest {
 
   @Test
   public void shouldExportDeploymentEvents() {
-    final List<DeploymentEvent> events = new ArrayList<>();
+    final List<Schema.DeploymentRecord> events = new ArrayList<>();
 
-    final ITopic<String> topic = hz.getTopic(CONFIGURATION.deploymentTopic);
+    final ITopic<byte[]> topic = hz.getTopic(CONFIGURATION.deploymentTopic);
     topic.addMessageListener(new DeploymentEventListener(events::add));
 
     client
@@ -114,15 +112,15 @@ public class ExporterTest {
 
     assertThat(events)
         .hasSize(2)
-        .extracting(r -> r.getIntent())
+        .extracting(r -> r.getMetadata().getIntent())
         .containsExactly("CREATED", "DISTRIBUTED");
   }
 
   @Test
   public void shouldExportJobEvents() {
-    final List<JobEvent> events = new ArrayList<>();
+    final List<Schema.JobRecord> events = new ArrayList<>();
 
-    final ITopic<String> topic = hz.getTopic(CONFIGURATION.jobTopic);
+    final ITopic<byte[]> topic = hz.getTopic(CONFIGURATION.jobTopic);
     topic.addMessageListener(new JobEventListener(events::add));
 
     client
@@ -143,14 +141,14 @@ public class ExporterTest {
 
     TestUtil.waitUntil(() -> events.size() >= 1);
 
-    assertThat(events).hasSize(1).extracting(r -> r.getIntent()).containsExactly("CREATED");
+    assertThat(events).hasSize(1).extracting(r -> r.getMetadata().getIntent()).containsExactly("CREATED");
   }
 
   @Test
   public void shouldExportIncidentEvents() {
-    final List<IncidentEvent> events = new ArrayList<>();
+    final List<Schema.IncidentRecord> events = new ArrayList<>();
 
-    final ITopic<String> topic = hz.getTopic(CONFIGURATION.incidentTopic);
+    final ITopic<byte[]> topic = hz.getTopic(CONFIGURATION.incidentTopic);
     topic.addMessageListener(new IncidentEventListener(events::add));
 
     client
@@ -170,6 +168,6 @@ public class ExporterTest {
 
     TestUtil.waitUntil(() -> events.size() >= 1);
 
-    assertThat(events).hasSize(1).extracting(r -> r.getIntent()).containsExactly("CREATED");
+    assertThat(events).hasSize(1).extracting(r -> r.getMetadata().getIntent()).containsExactly("CREATED");
   }
 }

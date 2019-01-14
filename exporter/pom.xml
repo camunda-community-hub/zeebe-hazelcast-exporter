@@ -16,14 +16,14 @@
 	<dependencies>
 
 		<dependency>
-			<groupId>io.zeebe.hazelcast</groupId>
-			<artifactId>zeebe-hazelcast-protocol</artifactId>
+			<groupId>io.zeebe</groupId>
+			<artifactId>zb-exporter-api</artifactId>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>io.zeebe</groupId>
-			<artifactId>zb-exporter-api</artifactId>
-			<scope>provided</scope>
+			<artifactId>zeebe-exporter-protobuf</artifactId>
 		</dependency>
 
 		<dependency>
