@@ -33,6 +33,14 @@ topic.addMessageListener(new WorkflowInstanceEventListener(event -> {
 }));
 ```
 
+You can use one of the following listeners:
+
+* `WorkflowInstanceEventListener`
+* `DeploymentEventListener`
+* `JobEventListener`
+* `IncidentEventListener`
+
+
 ### Exporter
 
 Before you start the broker, copy the exporter JAR  into the lib folder of the broker.
