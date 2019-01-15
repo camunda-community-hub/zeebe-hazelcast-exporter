@@ -18,33 +18,25 @@ public class ExampleApplication {
     clientConfig.getNetworkConfig().addAddress("127.0.0.1:5701");
     HazelcastInstance hz = HazelcastClient.newHazelcastClient(clientConfig);
 
-    ITopic<String> topic = hz.getTopic("zeebe-workflow-instances");
+    ITopic<byte[]> topic = hz.getTopic("zeebe-workflow-instances");
     topic.addMessageListener(
         new WorkflowInstanceEventListener(
-            event -> {
-              System.out.println("> " + event);
-            }));
+            event -> System.out.println("> " + event)));
 
-    hz.<String>getTopic("zeebe-deployments")
+    hz.<byte[]>getTopic("zeebe-deployments")
         .addMessageListener(
             new DeploymentEventListener(
-                event -> {
-                  System.out.println("> " + event);
-                }));
+                event -> System.out.println("> " + event)));
 
-    hz.<String>getTopic("zeebe-jobs")
+    hz.<byte[]>getTopic("zeebe-jobs")
         .addMessageListener(
             new JobEventListener(
-                event -> {
-                  System.out.println("> " + event);
-                }));
+                event -> System.out.println("> " + event)));
 
-    hz.<String>getTopic("zeebe-incidents")
+    hz.<byte[]>getTopic("zeebe-incidents")
         .addMessageListener(
             new IncidentEventListener(
-                event -> {
-                  System.out.println("> " + event);
-                }));
+                event -> System.out.println("> " + event)));
 
     try {
       new CountDownLatch(1).await();

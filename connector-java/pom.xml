@@ -14,12 +14,6 @@
 	</parent>
 
 	<dependencies>
-		
-		<dependency>
-			<groupId>io.zeebe.hazelcast</groupId>
-			<artifactId>zeebe-hazelcast-protocol</artifactId>
-		</dependency>
-
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast-client</artifactId>
@@ -72,6 +66,10 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>io.zeebe</groupId>
+			<artifactId>zeebe-exporter-protobuf</artifactId>
+		</dependency>
 	</dependencies>
 
 </project>

@@ -1,12 +1,16 @@
 package io.zeebe.hazelcast.connect.java;
 
-import io.zeebe.hazelcast.protocol.JobEvent;
-import io.zeebe.hazelcast.protocol.JobRecord;
+import io.zeebe.exporter.proto.Schema;
 import java.util.function.Consumer;
 
-public class JobEventListener extends ZeebeHazelcastListener<JobEvent> {
+public class JobEventListener extends ZeebeHazelcastListener<Schema.JobRecord> {
 
-  public JobEventListener(Consumer<JobEvent> consumer) {
-    super(JobRecord.class, consumer);
+  public JobEventListener(Consumer<Schema.JobRecord> consumer) {
+    super(consumer);
+  }
+
+  @Override
+  protected Schema.JobRecord toProtobufMessage(byte[] message) throws Exception {
+    return Schema.JobRecord.parseFrom(message);
   }
 }

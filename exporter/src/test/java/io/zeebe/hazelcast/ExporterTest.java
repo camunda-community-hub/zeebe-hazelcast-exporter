@@ -1,12 +1,14 @@
 package io.zeebe.hazelcast;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
 import io.zeebe.client.ZeebeClient;
+import io.zeebe.exporter.proto.Schema;
 import io.zeebe.hazelcast.exporter.ExporterConfiguration;
 import io.zeebe.model.bpmn.Bpmn;
 import io.zeebe.model.bpmn.BpmnModelInstance;
@@ -54,10 +56,10 @@ public class ExporterTest {
   }
 
   @Test
-  public void shouldExportEventsAsJson() {
-    final List<String> messages = new ArrayList<>();
+  public void shouldExportEventsAsProtobuf() throws Exception {
+    final List<byte[]> messages = new ArrayList<>();
 
-    final ITopic<String> topic = hz.getTopic(CONFIGURATION.deploymentTopic);
+    final ITopic<byte[]> topic = hz.getTopic(CONFIGURATION.deploymentTopic);
     topic.addMessageListener(m -> messages.add(m.getMessageObject()));
 
     client
@@ -69,6 +71,10 @@ public class ExporterTest {
 
     TestUtil.waitUntil(() -> messages.size() > 0);
 
-    assertThat(messages.get(0)).startsWith("{").endsWith("}");
+    byte[] message = messages.get(0);
+
+    final Schema.DeploymentRecord deploymentRecord = Schema.DeploymentRecord.parseFrom(message);
+    final Schema.DeploymentRecord.Resource resource = deploymentRecord.getResources(0);
+    assertThat(resource.getResourceName()).isEqualTo("process.bpmn");
   }
 }

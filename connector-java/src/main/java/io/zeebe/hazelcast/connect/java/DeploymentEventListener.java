@@ -1,12 +1,16 @@
 package io.zeebe.hazelcast.connect.java;
 
-import io.zeebe.hazelcast.protocol.DeploymentEvent;
-import io.zeebe.hazelcast.protocol.DeploymentRecord;
+import io.zeebe.exporter.proto.Schema;
 import java.util.function.Consumer;
 
-public class DeploymentEventListener extends ZeebeHazelcastListener<DeploymentEvent> {
+public class DeploymentEventListener extends ZeebeHazelcastListener<Schema.DeploymentRecord> {
 
-  public DeploymentEventListener(Consumer<DeploymentEvent> consumer) {
-    super(DeploymentRecord.class, consumer);
+  public DeploymentEventListener(Consumer<Schema.DeploymentRecord> consumer) {
+    super(consumer);
+  }
+
+  @Override
+  protected Schema.DeploymentRecord toProtobufMessage(byte[] message) throws Exception {
+    return Schema.DeploymentRecord.parseFrom(message);
   }
 }
