@@ -26,7 +26,11 @@ hs_err_pid*
 **/.settings
 **/target
 
-# intellij
+# intellij / vs
 .idea
 *.iml
-/bin/
+bin/
+packages/
+*.userprefs
+obj/
+.vs/
