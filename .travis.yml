@@ -1,2 +1,13 @@
-language: csharp
-solution: connector-csharp/Connector.sln
+matrix:
+  include:
+    - language: csharp
+      solution: connector-csharp/Connector.sln
+
+    - language: java
+      before_script:
+        - cd exporter/
+        
+        
+    - language: java
+      before_script:
+        - cd connector-java/
