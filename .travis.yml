@@ -1,2 +1,2 @@
 language: csharp
-solution: connecor-csharp/Connector.sln
+solution: connector-csharp/Connector.sln
