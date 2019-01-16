@@ -40,6 +40,22 @@ You can use one of the following listeners:
 * `JobEventListener`
 * `IncidentEventListener`
 
+### C# Application
+
+Add the nuget package `zeebe hazelcast connector(???)` to your project.
+
+Example usage:
+```
+            // Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
+            var hz = HazelcastClient.NewHazelcastClient();
+            // Get a Topic called "zeebe-deployments"
+            var topic = hz.GetTopic<byte[]>("zeebe-deployments");
+
+             // Add a Listener to the Topic
+            DeploymentListener.Consumer consumer = (record) => Console.WriteLine(record.ToString());
+            topic.AddMessageListener(new DeploymentListener(consumer));
+
+```
 
 ### Exporter
 
