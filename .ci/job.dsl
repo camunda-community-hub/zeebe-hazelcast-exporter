@@ -45,7 +45,12 @@ fi
 def githubRelease = '''\
 #!/bin/bash
 
-cd target
+# do github release
+curl -sL https://github.com/aktau/github-release/releases/download/v0.7.2/linux-amd64-github-release.tar.bz2 | tar xjvf - --strip 3
+
+./github-release release --user zeebe-io --repo zeebe-hazelcast-exporter --tag ${RELEASE_VERSION} --name "Zeebe Hazelcast Exporter ${RELEASE_VERSION}" --description ""
+
+cd exporter/target
 
 JAR="zeebe-hazelcast-exporter-${RELEASE_VERSION}.jar"
 CHECKSUM="${JAR}.sha1sum"
@@ -53,12 +58,20 @@ CHECKSUM="${JAR}.sha1sum"
 # create checksum files
 sha1sum ${JAR} > ${CHECKSUM}
 
-# do github release
-curl -sL https://github.com/aktau/github-release/releases/download/v0.7.2/linux-amd64-github-release.tar.bz2 | tar xjvf - --strip 3
+../../github-release upload --user zeebe-io --repo zeebe-hazelcast-exporter --tag ${RELEASE_VERSION} --name "${JAR}" --file "${JAR}"
+../../github-release upload --user zeebe-io --repo zeebe-hazelcast-exporter --tag ${RELEASE_VERSION} --name "${CHECKSUM}" --file "${CHECKSUM}"
 
-./github-release release --user zeebe-io --repo zeebe-hazelcast-exporter --tag ${RELEASE_VERSION} --name "Zeebe Hazelcast Exporter ${RELEASE_VERSION}" --description ""
-./github-release upload --user zeebe-io --repo zeebe-hazelcast-exporter --tag ${RELEASE_VERSION} --name "${JAR}" --file "${JAR}"
-./github-release upload --user zeebe-io --repo zeebe-hazelcast-exporter --tag ${RELEASE_VERSION} --name "${CHECKSUM}" --file "${CHECKSUM}"
+cd ../../connector-java/target
+
+JAR="zeebe-hazelcast-connector-${RELEASE_VERSION}.jar"
+CHECKSUM="${JAR}.sha1sum"
+
+# create checksum files
+sha1sum ${JAR} > ${CHECKSUM}
+
+../../github-release upload --user zeebe-io --repo zeebe-hazelcast-exporter --tag ${RELEASE_VERSION} --name "${JAR}" --file "${JAR}"
+../../github-release upload --user zeebe-io --repo zeebe-hazelcast-exporter --tag ${RELEASE_VERSION} --name "${CHECKSUM}" --file "${CHECKSUM}"
+
 '''
 
 // properties used by the release build
