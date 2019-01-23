@@ -1,6 +1,6 @@
 #!/bin/bash
 
-schemaVersion='master'
+schemaVersion='0.1.0'
 protoFile=schema.proto
 protoFilePath=./
 genPath=Connector/Zeebe/Hazelcast/Connector
@@ -29,3 +29,5 @@ echo -e "\n"
   -I${protoFilePath} \
   --csharp_out ${genPath} \
   ${protoFilePath}/${protoFile} 
+
+rm ${protoFile}
