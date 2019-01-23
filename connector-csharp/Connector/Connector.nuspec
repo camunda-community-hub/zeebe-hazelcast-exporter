@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>zeebe-connector</id>
+    <version>0.1.0</version>
+    <title>Zeebe Hazelcast Connector</title>
+    <authors>Christopher Zell</authors>
+    <owners>Zelldon</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>https://github.com/zeebe-io/zeebe-hazelcast-exporter</projectUrl>
+    <iconUrl>http://zeebe.io/img/zeebe-logo.svg</iconUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+
+    <description>
+    	Represents an Zeebe Hazelcast connector, which can be used in combination
+	with the Zeebe Hazelcast exporter.
+
+	The Zeebe Hazelcast exporter transforms the exported Zeebe Records into
+	protobuf messages and transfer them over the wire to the registered connectors.
+	Zeebe Hazelcast Connectors are available for Java and C#.
+
+	For more information please visit https://github.com/zeebe-io/zeebe-hazelcast-exporter .
+    </description>
+    <releaseNotes>
+	Released first version of the Zeebe Hazelcast Exporter and the corresponding C# connector.
+	The Exporter currently only supports the following value types:
+
+	* WorkflowInstanceEventListener
+	* DeploymentEventListener
+	* JobEventListener
+	* IncidentEventListener
+    </releaseNotes>
+    <summary>Zeebe Hazelcast Connector to connect with the Zeebe Hazelcast Exporter.</summary>
+    <tags>zeebe, zb, zb-csharp, hazelcast-connector, connector, hazelcast, zeebe-hazelcast</tags>
+  </metadata>
+</package>
