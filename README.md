@@ -29,7 +29,7 @@ ClientConfig clientConfig = new ClientConfig();
 clientConfig.getNetworkConfig().addAddress("127.0.0.1:5701");
 HazelcastInstance hz = HazelcastClient.newHazelcastClient(clientConfig);
 
-ITopic<String> topic = hz.getTopic("zeebe-workflow-instances");
+ITopic<byte[]> topic = hz.getTopic("zeebe-workflow-instances");
 topic.addMessageListener(new WorkflowInstanceEventListener(event -> {
     // do something ...
 }));
