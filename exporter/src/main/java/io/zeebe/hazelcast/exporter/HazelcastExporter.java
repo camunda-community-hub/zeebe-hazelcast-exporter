@@ -1,22 +1,21 @@
 package io.zeebe.hazelcast.exporter;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.EnumMap;
-
 import com.google.protobuf.GeneratedMessageV3;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
-import io.zeebe.exporter.context.Context;
-import io.zeebe.exporter.context.Controller;
+import io.zeebe.exporter.api.context.Context;
+import io.zeebe.exporter.api.context.Controller;
+import io.zeebe.exporter.api.record.Record;
+import io.zeebe.exporter.api.record.RecordMetadata;
+import io.zeebe.exporter.api.spi.Exporter;
 import io.zeebe.exporter.proto.RecordTransformer;
-import io.zeebe.exporter.record.Record;
-import io.zeebe.exporter.record.RecordMetadata;
-import io.zeebe.exporter.spi.Exporter;
 import io.zeebe.protocol.clientapi.RecordType;
 import io.zeebe.protocol.clientapi.ValueType;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.EnumMap;
 import org.slf4j.Logger;
 
 public class HazelcastExporter implements Exporter {
@@ -77,15 +76,14 @@ public class HazelcastExporter implements Exporter {
   private byte[] transformRecord(Record record) {
     final GeneratedMessageV3 dto = RecordTransformer.toProtobufMessage(record);
 
-      try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream())
-      {
-        dto.writeTo(outputStream);
-        return outputStream.toByteArray();
-      } catch (IOException ioe)
-      {
-        final String exceptionMsg = String.format("Failed to write %s to byte array output stream.", dto.toString());
-        logger.error(exceptionMsg, ioe);
-        throw new RuntimeException(exceptionMsg, ioe);
-      }
+    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+      dto.writeTo(outputStream);
+      return outputStream.toByteArray();
+    } catch (IOException ioe) {
+      final String exceptionMsg =
+          String.format("Failed to write %s to byte array output stream.", dto.toString());
+      logger.error(exceptionMsg, ioe);
+      throw new RuntimeException(exceptionMsg, ioe);
+    }
   }
 }

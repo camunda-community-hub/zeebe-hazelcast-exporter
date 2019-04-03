@@ -1,7 +1,6 @@
 package io.zeebe.hazelcast;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
@@ -28,7 +27,7 @@ public class ExporterTest {
       Bpmn.createExecutableProcess("process")
           .startEvent("start")
           .sequenceFlowId("to-task")
-          .serviceTask("task", s -> s.zeebeTaskType("test").zeebeInput("$.foo", "$.bar"))
+          .serviceTask("task", s -> s.zeebeTaskType("test"))
           .sequenceFlowId("to-end")
           .endEvent("end")
           .done();
@@ -62,12 +61,7 @@ public class ExporterTest {
     final ITopic<byte[]> topic = hz.getTopic(CONFIGURATION.deploymentTopic);
     topic.addMessageListener(m -> messages.add(m.getMessageObject()));
 
-    client
-        .workflowClient()
-        .newDeployCommand()
-        .addWorkflowModel(WORKFLOW, "process.bpmn")
-        .send()
-        .join();
+    client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
 
     TestUtil.waitUntil(() -> messages.size() > 0);
 
