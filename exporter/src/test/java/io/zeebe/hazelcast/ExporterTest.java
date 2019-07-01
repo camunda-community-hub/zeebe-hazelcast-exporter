@@ -11,6 +11,7 @@ import io.zeebe.exporter.proto.Schema;
 import io.zeebe.hazelcast.exporter.ExporterConfiguration;
 import io.zeebe.model.bpmn.Bpmn;
 import io.zeebe.model.bpmn.BpmnModelInstance;
+import io.zeebe.protocol.record.ValueType;
 import io.zeebe.test.ZeebeTestRule;
 import io.zeebe.test.util.TestUtil;
 import java.util.ArrayList;
@@ -58,7 +59,7 @@ public class ExporterTest {
   public void shouldExportEventsAsProtobuf() throws Exception {
     final List<byte[]> messages = new ArrayList<>();
 
-    final ITopic<byte[]> topic = hz.getTopic(CONFIGURATION.deploymentTopic);
+    final ITopic<byte[]> topic = hz.getTopic(CONFIGURATION.getTopicName(ValueType.DEPLOYMENT));
     topic.addMessageListener(m -> messages.add(m.getMessageObject()));
 
     client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();

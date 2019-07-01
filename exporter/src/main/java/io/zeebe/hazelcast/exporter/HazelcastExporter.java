@@ -7,19 +7,26 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
 import io.zeebe.exporter.api.context.Context;
 import io.zeebe.exporter.api.context.Controller;
-import io.zeebe.exporter.api.record.Record;
-import io.zeebe.exporter.api.record.RecordMetadata;
+import io.zeebe.protocol.record.Record;
 import io.zeebe.exporter.api.Exporter;
 import io.zeebe.exporter.proto.RecordTransformer;
-import io.zeebe.protocol.RecordType;
-import io.zeebe.protocol.ValueType;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import io.zeebe.protocol.record.RecordType;
+import io.zeebe.protocol.record.ValueType;
 import org.slf4j.Logger;
 
 public class HazelcastExporter implements Exporter {
   private final EnumMap<ValueType, ITopic<byte[]>> topics = new EnumMap<>(ValueType.class);
+
+  private final List<ValueType> enabledValueTypes = new ArrayList<>();
 
   private ExporterConfiguration config;
   private Logger logger;
@@ -33,6 +40,29 @@ public class HazelcastExporter implements Exporter {
     config = context.getConfiguration().instantiate(ExporterConfiguration.class);
 
     logger.debug("Starting exporter with configuration: {}", config);
+
+    final List<RecordType> enabledRecordTypes =
+        parseList(config.enabledRecordTypes).map(RecordType::valueOf).collect(Collectors.toList());
+
+    parseList(config.enabledValueTypes).map(ValueType::valueOf).forEach(enabledValueTypes::add);
+
+    context.setFilter(
+        new Context.RecordFilter() {
+
+          @Override
+          public boolean acceptType(RecordType recordType) {
+            return enabledRecordTypes.contains(recordType);
+          }
+
+          @Override
+          public boolean acceptValue(ValueType valueType) {
+            return enabledValueTypes.contains(valueType);
+          }
+        });
+  }
+
+  private Stream<String> parseList(String list) {
+    return Arrays.stream(list.split(",")).map(String::trim).map(String::toUpperCase);
   }
 
   @Override
@@ -40,14 +70,18 @@ public class HazelcastExporter implements Exporter {
     this.controller = controller;
 
     final Config cfg = new Config();
+    cfg.getNetworkConfig().setPort(config.port);
     cfg.setProperty("hazelcast.logging.type", "slf4j");
 
     hazelcast = Hazelcast.newHazelcastInstance(cfg);
 
-    topics.put(ValueType.DEPLOYMENT, hazelcast.getTopic(config.deploymentTopic));
-    topics.put(ValueType.WORKFLOW_INSTANCE, hazelcast.getTopic(config.workflowInstanceTopic));
-    topics.put(ValueType.JOB, hazelcast.getTopic(config.jobTopic));
-    topics.put(ValueType.INCIDENT, hazelcast.getTopic(config.incidentTopic));
+    enabledValueTypes.forEach(
+        valueType -> {
+          final String topicName = config.getTopicName(valueType);
+          topics.put(valueType, hazelcast.getTopic(topicName));
+
+          logger.debug("Export records of type '{}' to Hazelcast topic '{}'", valueType, topicName);
+        });
   }
 
   @Override
@@ -57,17 +91,12 @@ public class HazelcastExporter implements Exporter {
 
   @Override
   public void export(Record record) {
-    final RecordMetadata metadata = record.getMetadata();
-    final ValueType valueType = metadata.getValueType();
 
-    if (metadata.getRecordType() == RecordType.EVENT) {
+    final ITopic<byte[]> topic = topics.get(record.getValueType());
+    if (topic != null) {
 
-      final ITopic<byte[]> topic = topics.get(valueType);
-      if (topic != null) {
-
-        final byte[] json = transformRecord(record);
-        topic.publish(json);
-      }
+      final byte[] protobuf = transformRecord(record);
+      topic.publish(protobuf);
     }
 
     controller.updateLastExportedRecordPosition(record.getPosition());
@@ -79,6 +108,7 @@ public class HazelcastExporter implements Exporter {
     try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
       dto.writeTo(outputStream);
       return outputStream.toByteArray();
+
     } catch (IOException ioe) {
       final String exceptionMsg =
           String.format("Failed to write %s to byte array output stream.", dto.toString());
