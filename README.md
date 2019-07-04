@@ -2,7 +2,7 @@
 
 # zeebe-hazelcast-exporter
 
-Export events from [Zeebe](https://github.com/zeebe-io/zeebe) to [Hazelcast](https://github.com/hazelcast/hazelcast/). Hazelcast is an in-memory data grid which is used here as a message topic.
+Export records from [Zeebe](https://github.com/zeebe-io/zeebe) to [Hazelcast](https://github.com/hazelcast/hazelcast/). Hazelcast is an in-memory data grid which is used here as a message topic.
 
 ![How it works](how-it-works.png)
 
@@ -29,18 +29,12 @@ ClientConfig clientConfig = new ClientConfig();
 clientConfig.getNetworkConfig().addAddress("127.0.0.1:5701");
 HazelcastInstance hz = HazelcastClient.newHazelcastClient(clientConfig);
 
-ITopic<byte[]> topic = hz.getTopic("zeebe-workflow-instances");
-topic.addMessageListener(new WorkflowInstanceEventListener(event -> {
-    // do something ...
-}));
+final ZeebeHazelcast zeebeHazelcast = new ZeebeHazelcast(hz);
+
+zeebeHazelcast.addWorkflowInstanceListener(workflowInstance -> {
+    // ...
+});
 ```
-
-You can use one of the following listeners:
-
-* `WorkflowInstanceEventListener`
-* `DeploymentEventListener`
-* `JobEventListener`
-* `IncidentEventListener`
 
 ### C# Application
 
@@ -59,7 +53,7 @@ Example usage:
 
 ```
 
-### Exporter
+## Install
 
 Before you start the broker, copy the exporter JAR  into the lib folder of the broker.
 
@@ -79,22 +73,33 @@ Now start the broker and the applications.
 
 ### Configuration
 
-In the Zeebe configuration file, you can change the topics where the events are published.
+In the Zeebe configuration file, you can change 
+
+* the Hazelcast port
+* the topic name prefix
+* the value and record types which are exported
+
+Default values:
 
 ```
 [[exporters]]
 id = "hazelcast"
 className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
 
-deploymentTopic = "zeebe-deployments"
-workflowInstanceTopic = "zeebe-workflow-instances"
-jobTopic = "zeebe-jobs"
-incidentTopic = "zeebe-incidents"
+port = 5701
+
+topicPrefix = "zeebe-"
+
+# comma separated list of io.zeebe.protocol.record.ValueType
+enabledValueTypes = "JOB,WORKFLOW_INSTANCE,DEPLOYMENT,INCIDENT"
+
+# comma separated list of io.zeebe.protocol.record.RecordType
+enabledRecordTypes = "EVENT"
 ```
 
-## How to build
+## Build it from Source
 
-Build with Maven
+The exporter and the Java connector can be built with Maven
 
 `mvn clean install`
 

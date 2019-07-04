@@ -6,13 +6,9 @@ import static org.assertj.core.api.Assertions.tuple;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.ITopic;
 import io.zeebe.client.ZeebeClient;
 import io.zeebe.exporter.proto.Schema;
-import io.zeebe.hazelcast.connect.java.DeploymentEventListener;
-import io.zeebe.hazelcast.connect.java.IncidentEventListener;
-import io.zeebe.hazelcast.connect.java.JobEventListener;
-import io.zeebe.hazelcast.connect.java.WorkflowInstanceEventListener;
+import io.zeebe.hazelcast.connect.java.ZeebeHazelcast;
 import io.zeebe.hazelcast.exporter.ExporterConfiguration;
 import io.zeebe.model.bpmn.Bpmn;
 import io.zeebe.model.bpmn.BpmnModelInstance;
@@ -45,6 +41,7 @@ public class ExporterTest {
 
   private ZeebeClient client;
   private HazelcastInstance hz;
+  private ZeebeHazelcast zeebeHazelcast;
 
   @Before
   public void init() {
@@ -53,6 +50,8 @@ public class ExporterTest {
     final ClientConfig clientConfig = new ClientConfig();
     clientConfig.getNetworkConfig().addAddress("127.0.0.1:5701");
     hz = HazelcastClient.newHazelcastClient(clientConfig);
+
+    zeebeHazelcast = new ZeebeHazelcast(hz);
   }
 
   @After
@@ -64,8 +63,7 @@ public class ExporterTest {
   public void shouldExportWorkflowInstanceEvents() {
     final List<Schema.WorkflowInstanceRecord> events = new ArrayList<>();
 
-    final ITopic<byte[]> topic = hz.getTopic(CONFIGURATION.workflowInstanceTopic);
-    topic.addMessageListener(new WorkflowInstanceEventListener(events::add));
+    zeebeHazelcast.addWorkflowInstanceListener(events::add);
 
     client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
 
@@ -86,8 +84,7 @@ public class ExporterTest {
   public void shouldExportDeploymentEvents() {
     final List<Schema.DeploymentRecord> events = new ArrayList<>();
 
-    final ITopic<byte[]> topic = hz.getTopic(CONFIGURATION.deploymentTopic);
-    topic.addMessageListener(new DeploymentEventListener(events::add));
+    zeebeHazelcast.addDeploymentListener(events::add);
 
     client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
 
@@ -103,8 +100,7 @@ public class ExporterTest {
   public void shouldExportJobEvents() {
     final List<Schema.JobRecord> events = new ArrayList<>();
 
-    final ITopic<byte[]> topic = hz.getTopic(CONFIGURATION.jobTopic);
-    topic.addMessageListener(new JobEventListener(events::add));
+    zeebeHazelcast.addJobListener(events::add);
 
     client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
 
@@ -128,8 +124,7 @@ public class ExporterTest {
   public void shouldExportIncidentEvents() {
     final List<Schema.IncidentRecord> events = new ArrayList<>();
 
-    final ITopic<byte[]> topic = hz.getTopic(CONFIGURATION.incidentTopic);
-    topic.addMessageListener(new IncidentEventListener(events::add));
+    zeebeHazelcast.addIncidentListener(events::add);
 
     client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
 

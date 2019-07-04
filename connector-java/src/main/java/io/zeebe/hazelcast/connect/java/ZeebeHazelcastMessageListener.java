@@ -6,27 +6,29 @@ import com.hazelcast.core.MessageListener;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
-public abstract class ZeebeHazelcastListener<T extends GeneratedMessageV3>
+public class ZeebeHazelcastMessageListener<T extends GeneratedMessageV3>
     implements MessageListener<byte[]> {
 
-  private final Consumer<T> consumer;
-
-  public ZeebeHazelcastListener(Consumer<T> consumer) {
-    this.consumer = consumer;
+  interface MessageDeserializer<T> {
+    T deserialize(byte[] message) throws Exception;
   }
 
-  protected abstract T toProtobufMessage(byte[] message) throws Exception;
+  private final Consumer<T> consumer;
+  private final MessageDeserializer<T> deserializer;
+
+  public ZeebeHazelcastMessageListener(MessageDeserializer<T> deserializer, Consumer<T> consumer) {
+    this.deserializer = deserializer;
+    this.consumer = consumer;
+  }
 
   @Override
   public void onMessage(Message<byte[]> message) {
     final byte[] messageObject = message.getMessageObject();
     try {
-      final T protobufMessage = toProtobufMessage(messageObject);
+      final T protobufMessage = deserializer.deserialize(messageObject);
       consumer.accept(protobufMessage);
     } catch (Exception ex) {
-      final String exceptionMessage = "Expected to transform %s into protobuf message, but failed.";
-      throw new RuntimeException(
-          String.format(exceptionMessage, Arrays.toString(messageObject)), ex);
+      throw new RuntimeException("Failed to deserialize Protobuf message.", ex);
     }
   }
 }
