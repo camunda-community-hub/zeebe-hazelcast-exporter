@@ -5,11 +5,13 @@ import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
+import io.zeebe.exporter.api.Exporter;
 import io.zeebe.exporter.api.context.Context;
 import io.zeebe.exporter.api.context.Controller;
-import io.zeebe.protocol.record.Record;
-import io.zeebe.exporter.api.Exporter;
 import io.zeebe.exporter.proto.RecordTransformer;
+import io.zeebe.protocol.record.Record;
+import io.zeebe.protocol.record.RecordType;
+import io.zeebe.protocol.record.ValueType;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,9 +20,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import io.zeebe.protocol.record.RecordType;
-import io.zeebe.protocol.record.ValueType;
 import org.slf4j.Logger;
 
 public class HazelcastExporter implements Exporter {
@@ -59,6 +58,12 @@ public class HazelcastExporter implements Exporter {
             return enabledValueTypes.contains(valueType);
           }
         });
+
+    if (!config.updatePosition) {
+      logger.warn(
+              "The exporter is configured to not update its position. "
+                      + "Because of this, the broker can't delete data and may run out of disk space!");
+    }
   }
 
   private Stream<String> parseList(String list) {
@@ -99,7 +104,9 @@ public class HazelcastExporter implements Exporter {
       topic.publish(protobuf);
     }
 
-    controller.updateLastExportedRecordPosition(record.getPosition());
+    if (config.updatePosition) {
+      controller.updateLastExportedRecordPosition(record.getPosition());
+    }
   }
 
   private byte[] transformRecord(Record record) {

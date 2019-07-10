@@ -86,15 +86,23 @@ Default values:
 id = "hazelcast"
 className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
 
-port = 5701
-
-topicPrefix = "zeebe-"
-
-# comma separated list of io.zeebe.protocol.record.ValueType
-enabledValueTypes = "JOB,WORKFLOW_INSTANCE,DEPLOYMENT,INCIDENT"
-
-# comma separated list of io.zeebe.protocol.record.RecordType
-enabledRecordTypes = "EVENT"
+    [exporters.args]
+    # Hazelcast port
+    port = 5701
+    
+    # Hazelcast topic prefix
+    topicPrefix = "zeebe-"
+    
+    # comma separated list of io.zeebe.protocol.record.ValueType
+    enabledValueTypes = "JOB,WORKFLOW_INSTANCE,DEPLOYMENT,INCIDENT"
+    
+    # comma separated list of io.zeebe.protocol.record.RecordType
+    enabledRecordTypes = "EVENT"
+    
+    # If true, the exporter update its position after publish the record to Hazelcast.
+    # Otherwise, it never update its position. On broker start, it will always start from the begin of the log. 
+    # CAUTION! The broker can't delete data and may run out of disk space if set to false. 
+    updatePosition = true
 ```
 
 ## Build it from Source

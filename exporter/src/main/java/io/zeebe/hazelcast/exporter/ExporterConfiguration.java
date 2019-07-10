@@ -12,6 +12,8 @@ public class ExporterConfiguration {
 
   public String enabledRecordTypes = "EVENT";
 
+  public boolean updatePosition = true;
+
   public String getTopicName(ValueType valueType) {
     return topicPrefix + valueType.name();
   }
@@ -26,6 +28,8 @@ public class ExporterConfiguration {
         + enabledValueTypes
         + ", enabledRecordTypes="
         + enabledRecordTypes
+            + ", updatePosition="
+            + updatePosition
         + "]";
   }
 }
