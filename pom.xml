@@ -16,9 +16,9 @@
 	</parent>
 
 	<properties>
-		<version.zeebe>0.20.0</version.zeebe>
+		<version.zeebe>0.21.0-alpha1</version.zeebe>
 		<version.hazelcast>3.11</version.hazelcast>
-		<version.exporter.protobuf>0.7.0</version.exporter.protobuf>
+		<version.exporter.protobuf>0.8.0-SNAPSHOT</version.exporter.protobuf>
 
 		<!-- release parent settings -->
 		<version.java>1.8</version.java>
