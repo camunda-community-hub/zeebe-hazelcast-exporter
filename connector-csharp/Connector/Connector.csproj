@@ -7,7 +7,8 @@
     <ProjectGuid>{B027E8AB-3BBD-4BFF-B835-63543FBF4DC5}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Zeebe.Hazelcast.Connector</RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <AssemblyName>Connector</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -51,22 +52,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Zeebe\Hazelcast\Connector\DeploymentListener.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Zeebe\Hazelcast\Connector\ConnectorMain.cs" />
-    <Compile Include="Zeebe\Hazelcast\Connector\Schema.cs" />
-    <Compile Include="Zeebe\Hazelcast\Connector\JobListener.cs" />
-    <Compile Include="Zeebe\Hazelcast\Connector\IncidentListener.cs" />
-    <Compile Include="Zeebe\Hazelcast\Connector\MessageListener.cs" />
-    <Compile Include="Zeebe\Hazelcast\Connector\WorkflowInstanceListener.cs" />
-    <Compile Include="Zeebe\Hazelcast\Connector\TimerListener.cs" />
-    <Compile Include="Zeebe\Hazelcast\Connector\MessageSubscriptionListener.cs" />
-    <Compile Include="Zeebe\Hazelcast\Connector\WorkflowSubscriptionListener.cs" />
-    <Compile Include="Zeebe\Hazelcast\Connector\JobBatchListener.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Zeebe\Hazelcast\Connector" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
