@@ -26,8 +26,7 @@ spec:
       env:
         - name: JAVA_TOOL_OPTIONS
           value: |
-            -XX:+UnlockExperimentalVMOptions
-            -XX:+UseCGroupMemoryLimitForHeap
+            -XX:+UseContainerSupport
       resources:
         limits:
           cpu: 1
