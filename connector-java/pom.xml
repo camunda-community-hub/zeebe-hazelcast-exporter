@@ -5,6 +5,10 @@
 	<artifactId>zeebe-hazelcast-connector</artifactId>
 	<packaging>jar</packaging>
 
+
+        <properties>
+          <version.java>8</version.java>
+        </properties>
 	<parent>
 		<groupId>io.zeebe.hazelcast</groupId>
 		<artifactId>root</artifactId>
