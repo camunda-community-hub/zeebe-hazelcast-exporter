@@ -11,7 +11,7 @@ curl -sL https://github.com/aktau/github-release/releases/download/v0.7.2/linux-
 # upload exporter
 cd exporter/target
 
-export ARTIFACT=zeebe-hazelcast-exporter-${RELEASE_VERSION}.jar
+export ARTIFACT=zeebe-hazelcast-exporter-${RELEASE_VERSION}-jar-with-dependencies.jar
 export CHECKSUM=${ARTIFACT}.sha1sum
 
 # create checksum files
