@@ -1,197 +1,190 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-  <modelVersion>4.0.0</modelVersion>
-  <name>Zeebe Hazelcast Root</name>
-  <groupId>io.zeebe.hazelcast</groupId>
-  <artifactId>root</artifactId>
-  <version>0.7.0-SNAPSHOT</version>
-  <packaging>pom</packaging>
+    <modelVersion>4.0.0</modelVersion>
+    <name>Zeebe Hazelcast Root</name>
+    <groupId>io.zeebe.hazelcast</groupId>
+    <artifactId>root</artifactId>
+    <version>0.7.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
-  <parent>
-    <groupId>org.camunda</groupId>
-    <artifactId>camunda-release-parent</artifactId>
-    <version>3.7</version>
-    <!-- do not remove empty tag - http://jira.codehaus.org/browse/MNG-4687 -->
-    <relativePath />
-  </parent>
+    <parent>
+        <groupId>org.camunda</groupId>
+        <artifactId>camunda-release-parent</artifactId>
+        <version>3.7</version>
+        <!-- do not remove empty tag - http://jira.codehaus.org/browse/MNG-4687 -->
+        <relativePath/>
+    </parent>
 
-  <properties>
-    <version.zeebe>0.21.0-alpha1</version.zeebe>
-    <version.hazelcast>3.11</version.hazelcast>
-    <version.exporter.protobuf>0.8.0</version.exporter.protobuf>
+    <properties>
+        <version.zeebe>0.22.0-alpha1</version.zeebe>
+        <version.hazelcast>3.11</version.hazelcast>
+        <version.exporter.protobuf>0.9.0-alpha1</version.exporter.protobuf>
 
-    <!-- release parent settings -->
-    <version.java>11</version.java>
-    <nexus.snapshot.repository>
-      https://app.camunda.com/nexus/content/repositories/zeebe-io-snapshots/
-    </nexus.snapshot.repository>
-    <nexus.release.repository>https://app.camunda.com/nexus/content/repositories/zeebe-io/
-    </nexus.release.repository>
+        <!-- release parent settings -->
+        <version.java>11</version.java>
+        <nexus.snapshot.repository>https://app.camunda.com/nexus/content/repositories/zeebe-io-snapshots/
+        </nexus.snapshot.repository>
+        <nexus.release.repository>https://app.camunda.com/nexus/content/repositories/zeebe-io/
+        </nexus.release.repository>
 
-    <!-- disable jdk8 javadoc checks on release build -->
-    <additionalparam>-Xdoclint:none</additionalparam>
-    <plugin.version.javadoc>3.1.1</plugin.version.javadoc>
-  </properties>
+        <!-- disable jdk8 javadoc checks on release build -->
+        <additionalparam>-Xdoclint:none</additionalparam>
+    </properties>
 
-  <modules>
-    <module>exporter</module>
-    <module>connector-java</module>
-  </modules>
+    <modules>
+        <module>exporter</module>
+        <module>connector-java</module>
+    </modules>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.zeebe.hazelcast</groupId>
+                <artifactId>zeebe-hazelcast-exporter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>io.zeebe.hazelcast</groupId>
-        <artifactId>zeebe-hazelcast-exporter</artifactId>
-        <version>${project.version}</version>
-      </dependency>
+            <dependency>
+                <groupId>io.zeebe</groupId>
+                <artifactId>zeebe-exporter-protobuf</artifactId>
+                <version>${version.exporter.protobuf}</version>
+            </dependency>
 
-      <dependency>
-        <groupId>io.zeebe</groupId>
-        <artifactId>zeebe-exporter-protobuf</artifactId>
-        <version>${version.exporter.protobuf}</version>
-      </dependency>
+            <dependency>
+                <groupId>io.zeebe</groupId>
+                <artifactId>zeebe-bom</artifactId>
+                <version>${version.zeebe}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
 
-      <dependency>
-        <groupId>io.zeebe</groupId>
-        <artifactId>zeebe-bom</artifactId>
-        <version>${version.zeebe}</version>
-        <scope>import</scope>
-        <type>pom</type>
-      </dependency>
+            <dependency>
+                <groupId>com.hazelcast</groupId>
+                <artifactId>hazelcast</artifactId>
+                <version>${version.hazelcast}</version>
+            </dependency>
 
-      <dependency>
-        <groupId>com.hazelcast</groupId>
-        <artifactId>hazelcast</artifactId>
-        <version>${version.hazelcast}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.hazelcast</groupId>
-        <artifactId>hazelcast-client</artifactId>
-        <version>${version.hazelcast}</version>
-      </dependency>
+            <dependency>
+                <groupId>com.hazelcast</groupId>
+                <artifactId>hazelcast-client</artifactId>
+                <version>${version.hazelcast}</version>
+            </dependency>
 
 
-      <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>4.12</version>
-        <scope>test</scope>
-      </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.12</version>
+                <scope>test</scope>
+            </dependency>
 
-      <dependency>
-        <groupId>org.assertj</groupId>
-        <artifactId>assertj-core</artifactId>
-        <version>3.10.0</version>
-        <scope>test</scope>
-      </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>3.10.0</version>
+                <scope>test</scope>
+            </dependency>
 
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-slf4j-impl</artifactId>
-        <version>2.11.1</version>
-      </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j-impl</artifactId>
+                <version>2.11.1</version>
+            </dependency>
 
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-core</artifactId>
-        <version>2.11.1</version>
-      </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>2.11.1</version>
+            </dependency>
 
 
-    </dependencies>
-  </dependencyManagement>
+        </dependencies>
+    </dependencyManagement>
 
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-javadoc-plugin</artifactId>
-          <version>${plugin.version.javadoc}</version>
-          <configuration>
-            <source>${version.java}</source>
-            <quiet>true</quiet>
-            <additionalOptions>-Xdoclint:none</additionalOptions>
-          </configuration>
-          <executions>
-            <execution>
-              <id>attach-javadocs</id>
-              <goals>
-                <goal>jar</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
-
-  <profiles>
-    <profile>
-      <id>release</id>
-      <properties>
-        <plugin.version.gpg>1.6</plugin.version.gpg>
-        <gpg.passphrase>${env.GPG_PASS}</gpg.passphrase>
-        <resume>false</resume>
-        <tag>${env.RELEASE_VERSION}</tag>
-        <releaseVersion>${env.RELEASE_VERSION}</releaseVersion>
-        <developmentVersion>${env.DEVELOPMENT_VERSION}</developmentVersion>
-        <arguments>-s .ci/settings.xml -DskipTests</arguments>
-      </properties>
-      <build>
-        <pluginManagement>
-          <plugins>
+    <build>
+        <plugins>
             <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-gpg-plugin</artifactId>
-              <configuration>
-                <gpgArguments>
-                  <arg>--pinentry-mode</arg>
-                  <arg>loopback</arg>
-                </gpgArguments>
-              </configuration>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <release>11</release>
+                </configuration>
             </plugin>
-          </plugins>
-        </pluginManagement>
-      </build>
-    </profile>
-  </profiles>
 
-  <repositories>
-    <repository>
-      <id>zeebe</id>
-      <name>Zeebe Repository</name>
-      <url>https://app.camunda.com/nexus/content/repositories/zeebe-io/</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <!-- Override java source version to workaround javadoc bug https://bugs.openjdk.java.net/browse/JDK-8212233 -->
+                    <source>8</source>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
-    <repository>
-      <id>zeebe-snapshots</id>
-      <name>Zeebe Snapshot Repository</name>
-      <url>https://app.camunda.com/nexus/content/repositories/zeebe-io-snapshots/</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
+    <profiles>
+        <profile>
+            <id>release</id>
+            <properties>
+                <plugin.version.gpg>1.6</plugin.version.gpg>
+                <gpg.passphrase>${env.GPG_PASS}</gpg.passphrase>
+                <resume>false</resume>
+                <tag>${env.RELEASE_VERSION}</tag>
+                <releaseVersion>${env.RELEASE_VERSION}</releaseVersion>
+                <developmentVersion>${env.DEVELOPMENT_VERSION}</developmentVersion>
+                <arguments>-s .ci/settings.xml -DskipTests</arguments>
+            </properties>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-gpg-plugin</artifactId>
+                            <configuration>
+                                <gpgArguments>
+                                    <arg>--pinentry-mode</arg>
+                                    <arg>loopback</arg>
+                                </gpgArguments>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+    </profiles>
 
-  <scm>
-    <url>https://github.com/zeebe-io/zeebe-hazelcast-exporter</url>
-    <connection>scm:git:git@github.com:zeebe-io/zeebe-hazelcast-exporter.git</connection>
-    <developerConnection>scm:git:git@github.com:zeebe-io/zeebe-hazelcast-exporter.git
-    </developerConnection>
-    <tag>HEAD</tag>
-  </scm>
+    <repositories>
+        <repository>
+            <id>zeebe</id>
+            <name>Zeebe Repository</name>
+            <url>https://app.camunda.com/nexus/content/repositories/zeebe-io/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+
+        <repository>
+            <id>zeebe-snapshots</id>
+            <name>Zeebe Snapshot Repository</name>
+            <url>https://app.camunda.com/nexus/content/repositories/zeebe-io-snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <scm>
+        <url>https://github.com/zeebe-io/zeebe-hazelcast-exporter</url>
+        <connection>scm:git:git@github.com:zeebe-io/zeebe-hazelcast-exporter.git</connection>
+        <developerConnection>scm:git:git@github.com:zeebe-io/zeebe-hazelcast-exporter.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
 
 </project>
