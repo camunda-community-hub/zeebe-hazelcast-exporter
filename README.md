@@ -58,7 +58,7 @@ Example usage:
 Before you start the broker, copy the exporter JAR  into the lib folder of the broker.
 
 ```
-cp exporter/target/zeebe-hazelcast-exporter-%{VERSION}.jar ~/zeebe-broker-%{VERSION}/lib/
+cp exporter/target/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar ~/zeebe-broker-%{VERSION}/lib/
 ```
 
 Register the exporter in the Zeebe configuration file `~/zeebe-broker-%{VERSION}/config/zeebe.cfg.toml`.
