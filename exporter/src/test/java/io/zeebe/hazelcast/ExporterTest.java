@@ -1,26 +1,23 @@
 package io.zeebe.hazelcast;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.ITopic;
+import com.hazelcast.ringbuffer.Ringbuffer;
 import io.zeebe.client.ZeebeClient;
 import io.zeebe.exporter.proto.Schema;
 import io.zeebe.hazelcast.exporter.ExporterConfiguration;
 import io.zeebe.model.bpmn.Bpmn;
 import io.zeebe.model.bpmn.BpmnModelInstance;
-import io.zeebe.protocol.record.ValueType;
 import io.zeebe.test.ZeebeTestRule;
-import io.zeebe.test.util.TestUtil;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.util.Properties;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ExporterTest {
 
@@ -57,18 +54,22 @@ public class ExporterTest {
 
   @Test
   public void shouldExportEventsAsProtobuf() throws Exception {
-    final List<byte[]> messages = new ArrayList<>();
+    // given
+    final Ringbuffer<byte[]> buffer = hz.getRingbuffer(CONFIGURATION.name);
 
-    final ITopic<byte[]> topic = hz.getTopic(CONFIGURATION.getTopicName(ValueType.DEPLOYMENT));
-    topic.addMessageListener(m -> messages.add(m.getMessageObject()));
+    var sequence = buffer.headSequence();
 
+    // when
     client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
 
-    TestUtil.waitUntil(() -> messages.size() > 0);
+    // then
+    final var message = buffer.readOne(sequence);
+    assertThat(message).isNotNull();
 
-    byte[] message = messages.get(0);
+    final var record = Schema.Record.parseFrom(message);
+    assertThat(record.getRecord().is(Schema.DeploymentRecord.class)).isTrue();
 
-    final Schema.DeploymentRecord deploymentRecord = Schema.DeploymentRecord.parseFrom(message);
+    final var deploymentRecord = record.getRecord().unpack(Schema.DeploymentRecord.class);
     final Schema.DeploymentRecord.Resource resource = deploymentRecord.getResources(0);
     assertThat(resource.getResourceName()).isEqualTo("process.bpmn");
   }

@@ -2,11 +2,15 @@
 
 # zeebe-hazelcast-exporter
 
-Export records from [Zeebe](https://github.com/zeebe-io/zeebe) to [Hazelcast](https://github.com/hazelcast/hazelcast/). Hazelcast is an in-memory data grid which is used here as a message topic.
+Export records from [Zeebe](https://github.com/zeebe-io/zeebe) to [Hazelcast](https://github.com/hazelcast/hazelcast/). Hazelcast is an in-memory data grid which is used as a transport layer.
 
 ![How it works](how-it-works.png)
 
-The exporter provides an easy way to connect multiple applications to Zeebe. For example, an application can use the exporter to send a notification when a new incident is created. Without the exporter, the application needs to implement its own exporter. 
+The records are transformed into [Protobuf](https://github.com/zeebe-io/zeebe-exporter-protobuf) and added to one [ringbuffer](https://hazelcast.com/blog/ringbuffer-data-structure/). The ringbuffer has a fixed capacity and will override the oldest entries when the capacity is reached.
+
+Multiple applications can read from the ringbuffer. The application itself controls where to read from by proving a sequence number. Every application can read from a different sequence. 
+
+The Java and C# connector modules provide a convenient way to read the records from the ringbuffer.
 
 ## Usage
 
@@ -29,11 +33,16 @@ ClientConfig clientConfig = new ClientConfig();
 clientConfig.getNetworkConfig().addAddress("127.0.0.1:5701");
 HazelcastInstance hz = HazelcastClient.newHazelcastClient(clientConfig);
 
-final ZeebeHazelcast zeebeHazelcast = new ZeebeHazelcast(hz);
+final ZeebeHazelcast zeebeHazelcast = ZeebeHazelcast.newBuilder(hz)
+    .addWorkflowInstanceListener(workflowInstance -> { ... })
+    .readFrom(sequence) / .readFromHead() / .readFromTail()
+    .build();
 
-zeebeHazelcast.addWorkflowInstanceListener(workflowInstance -> {
-    // ...
-});
+// ...
+
+long sequence = zeebeHazelcast.getSequence();
+
+zeebeHazelcast.close();
 ```
 
 ### C# Application
@@ -76,8 +85,10 @@ Now start the broker and the applications.
 In the Zeebe configuration file, you can change 
 
 * the Hazelcast port
-* the topic name prefix
 * the value and record types which are exported
+* the ringbuffer's name
+* the ringbuffer's capacity
+* the ringbuffer's time-to-live
 
 Default values:
 
@@ -90,19 +101,20 @@ className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
     # Hazelcast port
     port = 5701
     
-    # Hazelcast topic prefix
-    topicPrefix = "zeebe-"
-    
     # comma separated list of io.zeebe.protocol.record.ValueType
     enabledValueTypes = "JOB,WORKFLOW_INSTANCE,DEPLOYMENT,INCIDENT"
     
     # comma separated list of io.zeebe.protocol.record.RecordType
     enabledRecordTypes = "EVENT"
+        
+    # Hazelcast ringbuffer's name
+    name = "zeebe"
     
-    # If true, the exporter update its position after publish the record to Hazelcast.
-    # Otherwise, it never update its position. On broker start, it will always start from the begin of the log. 
-    # CAUTION! The broker can't delete data and may run out of disk space if set to false. 
-    updatePosition = true
+    # Hazelcast ringbuffer's capacity
+    capacity = 10000 
+
+    # Hazelcast ringbuffer's time-to-live in seconds
+    timeToLiveInSeconds = 3600
 ```
 
 ## Build it from Source
