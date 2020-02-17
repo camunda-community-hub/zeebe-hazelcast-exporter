@@ -1,35 +1,31 @@
 package io.zeebe.hazelcast.exporter;
 
-import io.zeebe.protocol.record.ValueType;
-
 public class ExporterConfiguration {
 
   public int port = 5701;
 
-  public String topicPrefix = "zeebe-";
+  public String name = "zeebe";
+
+  public int capacity = -1;
+  public int timeToLiveInSeconds = -1;
 
   public String enabledValueTypes = "JOB,WORKFLOW_INSTANCE,DEPLOYMENT,INCIDENT";
-
   public String enabledRecordTypes = "EVENT";
-
-  public boolean updatePosition = true;
-
-  public String getTopicName(ValueType valueType) {
-    return topicPrefix + valueType.name();
-  }
 
   @Override
   public String toString() {
     return "[port="
-        + port
-        + ", topicPrefix="
-        + topicPrefix
-        + ", enabledValueTypes="
-        + enabledValueTypes
-        + ", enabledRecordTypes="
-        + enabledRecordTypes
-            + ", updatePosition="
-            + updatePosition
-        + "]";
+            + port
+            + ", name="
+            + name
+            + ", enabledValueTypes="
+            + enabledValueTypes
+            + ", enabledRecordTypes="
+            + enabledRecordTypes
+            + ", capacity="
+            + capacity
+            + ", timeToLiveInSeconds="
+            + timeToLiveInSeconds
+            + "]";
   }
 }

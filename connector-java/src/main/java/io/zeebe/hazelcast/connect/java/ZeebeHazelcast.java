@@ -1,158 +1,335 @@
 package io.zeebe.hazelcast.connect.java;
 
-import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.ITopic;
+import com.hazelcast.ringbuffer.Ringbuffer;
 import io.zeebe.exporter.proto.Schema;
-import io.zeebe.protocol.record.ValueType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
-public class ZeebeHazelcast {
+public class ZeebeHazelcast implements AutoCloseable {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(ZeebeHazelcast.class);
+
+  private static final List<Class<? extends com.google.protobuf.Message>> RECORD_MESSAGE_TYPES;
+
+  static {
+    RECORD_MESSAGE_TYPES = new ArrayList<>();
+    RECORD_MESSAGE_TYPES.add(Schema.DeploymentRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.JobRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.JobBatchRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.ErrorRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.VariableRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.VariableDocumentRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.MessageStartEventSubscriptionRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.MessageSubscriptionRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.MessageRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.WorkflowInstanceRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.WorkflowInstanceCreationRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.WorkflowInstanceResultRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.WorkflowInstanceSubscriptionRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.TimerRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.IncidentRecord.class);
+  }
 
   private final HazelcastInstance hazelcastInstance;
+  private final Ringbuffer<byte[]> ringbuffer;
+  private final Map<Class<?>, List<Consumer<?>>> listeners;
 
-  public ZeebeHazelcast(HazelcastInstance hazelcastInstance) {
+  private long sequence;
+
+  private Future<?> future;
+  private ExecutorService executorService;
+
+  private ZeebeHazelcast(
+          HazelcastInstance hazelcastInstance,
+          Ringbuffer<byte[]> ringbuffer,
+          long sequence,
+          Map<Class<?>, List<Consumer<?>>> listeners) {
     this.hazelcastInstance = hazelcastInstance;
+    this.ringbuffer = ringbuffer;
+    this.sequence = sequence;
+    this.listeners = listeners;
   }
 
-  public void addJobListener(Consumer<Schema.JobRecord> consumer) {
-    addJobListener(getTopicName(ValueType.JOB), consumer);
+  /**
+   * Returns a new builder to read from the ringbuffer.
+   */
+  public static Builder newBuilder(HazelcastInstance hazelcastInstance) {
+    return new ZeebeHazelcast.Builder(hazelcastInstance);
   }
 
-  public void addJobListener(String topic, Consumer<Schema.JobRecord> consumer) {
-    addMessageListener(topic, Schema.JobRecord::parseFrom, consumer);
+  private void start() {
+    executorService = Executors.newSingleThreadExecutor();
+    future = executorService.submit(this::readFromBuffer);
   }
 
-  public void addDeploymentListener(Consumer<Schema.DeploymentRecord> consumer) {
-    addDeploymentListener(getTopicName(ValueType.DEPLOYMENT), consumer);
+  /** Stop reading from the ringbuffer. */
+  @Override
+  public void close() throws Exception {
+    LOGGER.info("Closing. Stop reading from ringbuffer. Current sequence: '{}'", getSequence());
+
+    if (future != null) {
+      future.cancel(true);
+    }
+    if (executorService != null) {
+      executorService.shutdown();
+    }
   }
 
-  public void addDeploymentListener(String topic, Consumer<Schema.DeploymentRecord> consumer) {
-    addMessageListener(topic, Schema.DeploymentRecord::parseFrom, consumer);
+  /**
+   * Returns the current sequence.
+   */
+  public long getSequence() {
+    return sequence;
   }
 
-  public void addWorkflowInstanceListener(Consumer<Schema.WorkflowInstanceRecord> consumer) {
-    addWorkflowInstanceListener(getTopicName(ValueType.WORKFLOW_INSTANCE), consumer);
+  private void readFromBuffer() {
+    while (true) {
+      readNext();
+    }
   }
 
-  public void addWorkflowInstanceListener(
-      String topic, Consumer<Schema.WorkflowInstanceRecord> consumer) {
-    addMessageListener(topic, Schema.WorkflowInstanceRecord::parseFrom, consumer);
+  private void readNext() {
+    LOGGER.trace("Read from ringbuffer with sequence '{}'", sequence);
+
+    try {
+      final byte[] item = ringbuffer.readOne(sequence);
+
+      final var genericRecord = Schema.Record.parseFrom(item);
+      handleRecord(genericRecord);
+
+      sequence += 1;
+
+    } catch (InvalidProtocolBufferException e) {
+      LOGGER.error("Failed to deserialize Protobuf message at sequence '{}'", sequence, e);
+
+    } catch (InterruptedException e) {
+      LOGGER.debug("Interrupted while reading from ringbuffer with sequence '{}'", sequence);
+    }
   }
 
-  public void addIncidentListener(Consumer<Schema.IncidentRecord> consumer) {
-    addIncidentListener(getTopicName(ValueType.INCIDENT), consumer);
+  private void handleRecord(Schema.Record genericRecord) throws InvalidProtocolBufferException {
+    for (Class<? extends com.google.protobuf.Message> type : RECORD_MESSAGE_TYPES) {
+      final var handled = handleRecord(genericRecord, type);
+      if (handled) {
+        return;
+      }
+    }
   }
 
-  public void addIncidentListener(String topic, Consumer<Schema.IncidentRecord> consumer) {
-    addMessageListener(topic, Schema.IncidentRecord::parseFrom, consumer);
+  private <T extends com.google.protobuf.Message> boolean handleRecord(
+          Schema.Record genericRecord, Class<T> t) throws InvalidProtocolBufferException {
+
+    if (genericRecord.getRecord().is(t)) {
+      final var record = genericRecord.getRecord().unpack(t);
+
+      listeners
+              .getOrDefault(t, List.of())
+              .forEach(listener -> ((Consumer<T>) listener).accept(record));
+
+      return true;
+    } else {
+      return false;
+    }
   }
 
-  public void addErrorListener(Consumer<Schema.ErrorRecord> consumer) {
-    addErrorListener(getTopicName(ValueType.ERROR), consumer);
-  }
+  public static class Builder {
 
-  public void addErrorListener(String topic, Consumer<Schema.ErrorRecord> consumer) {
-    addMessageListener(topic, Schema.ErrorRecord::parseFrom, consumer);
-  }
+    private final HazelcastInstance hazelcastInstance;
 
-  public void addJobBatchListener(Consumer<Schema.JobBatchRecord> consumer) {
-    addJobBatchListener(getTopicName(ValueType.JOB_BATCH), consumer);
-  }
+    private final Map<Class<?>, List<Consumer<?>>> listeners = new HashMap<>();
 
-  public void addJobBatchListener(String topic, Consumer<Schema.JobBatchRecord> consumer) {
-    addMessageListener(topic, Schema.JobBatchRecord::parseFrom, consumer);
-  }
+    private String name = "zeebe";
 
-  public void addMessageListener(Consumer<Schema.MessageRecord> consumer) {
-    addMessageListener(getTopicName(ValueType.MESSAGE), consumer);
-  }
+    private long readFromSequence = -1;
+    private boolean readFromHead = false;
 
-  public void addMessageListener(String topic, Consumer<Schema.MessageRecord> consumer) {
-    addMessageListener(topic, Schema.MessageRecord::parseFrom, consumer);
-  }
+    private Builder(HazelcastInstance hazelcastInstance) {
+      this.hazelcastInstance = hazelcastInstance;
+    }
 
-  public void addMessageStartEventSubscriptionListener(
-      Consumer<Schema.MessageStartEventSubscriptionRecord> consumer) {
-    addMessageStartEventSubscriptionListener(
-        getTopicName(ValueType.MESSAGE_START_EVENT_SUBSCRIPTION), consumer);
-  }
+    /**
+     * Set the name of the ringbuffer to read from.
+     */
+    public Builder name(String name) {
+      this.name = name;
+      return this;
+    }
 
-  public void addMessageStartEventSubscriptionListener(
-      String topic, Consumer<Schema.MessageStartEventSubscriptionRecord> consumer) {
-    addMessageListener(topic, Schema.MessageStartEventSubscriptionRecord::parseFrom, consumer);
-  }
+    /** Start reading from the given sequence. */
+    public Builder readFrom(long sequence) {
+      this.readFromSequence = sequence;
+      readFromHead = false;
+      return this;
+    }
 
-  public void addMessageSubscriptionListener(Consumer<Schema.MessageSubscriptionRecord> consumer) {
-    addMessageSubscriptionListener(getTopicName(ValueType.MESSAGE_SUBSCRIPTION), consumer);
-  }
+    /** Start reading from the oldest item of the ringbuffer. */
+    public Builder readFromHead() {
+      readFromSequence = -1;
+      readFromHead = true;
+      return this;
+    }
 
-  public void addMessageSubscriptionListener(
-      String topic, Consumer<Schema.MessageSubscriptionRecord> consumer) {
-    addMessageListener(topic, Schema.MessageSubscriptionRecord::parseFrom, consumer);
-  }
+    /** Start reading from the newest item of the ringbuffer. */
+    public Builder readFromTail() {
+      readFromSequence = -1;
+      readFromHead = false;
+      return this;
+    }
 
-  public void addTimerListener(Consumer<Schema.TimerRecord> consumer) {
-    addTimerListener(getTopicName(ValueType.TIMER), consumer);
-  }
+    private <T extends com.google.protobuf.Message> void addListener(
+            Class<T> recordType, Consumer<T> listener) {
+      final var recordListeners = listeners.getOrDefault(recordType, new ArrayList<>());
+      recordListeners.add(listener);
+      listeners.put(recordType, recordListeners);
+    }
 
-  public void addTimerListener(String topic, Consumer<Schema.TimerRecord> consumer) {
-    addMessageListener(topic, Schema.TimerRecord::parseFrom, consumer);
-  }
+    public Builder addDeploymentListener(Consumer<Schema.DeploymentRecord> listener) {
+      addListener(Schema.DeploymentRecord.class, listener);
+      return this;
+    }
 
-  public void addVariableListener(Consumer<Schema.VariableRecord> consumer) {
-    addVariableListener(getTopicName(ValueType.VARIABLE), consumer);
-  }
+    public Builder addWorkflowInstanceListener(Consumer<Schema.WorkflowInstanceRecord> listener) {
+      addListener(Schema.WorkflowInstanceRecord.class, listener);
+      return this;
+    }
 
-  public void addVariableListener(String topic, Consumer<Schema.VariableRecord> consumer) {
-    addMessageListener(topic, Schema.VariableRecord::parseFrom, consumer);
-  }
+    public Builder addVariableListener(Consumer<Schema.VariableRecord> listener) {
+      addListener(Schema.VariableRecord.class, listener);
+      return this;
+    }
 
-  public void addVariableDocumentListener(Consumer<Schema.VariableDocumentRecord> consumer) {
-    addVariableDocumentListener(getTopicName(ValueType.VARIABLE_DOCUMENT), consumer);
-  }
+    public Builder addVariableDocumentListener(Consumer<Schema.VariableDocumentRecord> listener) {
+      addListener(Schema.VariableDocumentRecord.class, listener);
+      return this;
+    }
 
-  public void addVariableDocumentListener(
-      String topic, Consumer<Schema.VariableDocumentRecord> consumer) {
-    addMessageListener(topic, Schema.VariableDocumentRecord::parseFrom, consumer);
-  }
+    public Builder addJobListener(Consumer<Schema.JobRecord> listener) {
+      addListener(Schema.JobRecord.class, listener);
+      return this;
+    }
 
-  public void addWorkflowInstanceCreationListener(
-      Consumer<Schema.WorkflowInstanceCreationRecord> consumer) {
-    addWorkflowInstanceCreationListener(
-        getTopicName(ValueType.WORKFLOW_INSTANCE_CREATION), consumer);
-  }
+    public Builder addJobBatchListener(Consumer<Schema.JobBatchRecord> listener) {
+      addListener(Schema.JobBatchRecord.class, listener);
+      return this;
+    }
 
-  public void addWorkflowInstanceCreationListener(
-      String topic, Consumer<Schema.WorkflowInstanceCreationRecord> consumer) {
-    addMessageListener(topic, Schema.WorkflowInstanceCreationRecord::parseFrom, consumer);
-  }
+    public Builder addIncidentListener(Consumer<Schema.IncidentRecord> listener) {
+      addListener(Schema.IncidentRecord.class, listener);
+      return this;
+    }
 
-  public void addWorkflowInstanceSubscriptionListener(
-      Consumer<Schema.WorkflowInstanceSubscriptionRecord> consumer) {
-    addWorkflowInstanceSubscriptionListener(
-        getTopicName(ValueType.WORKFLOW_INSTANCE_SUBSCRIPTION), consumer);
-  }
+    public Builder addTimerListener(Consumer<Schema.TimerRecord> listener) {
+      addListener(Schema.TimerRecord.class, listener);
+      return this;
+    }
 
-  public void addWorkflowInstanceSubscriptionListener(
-      String topic, Consumer<Schema.WorkflowInstanceSubscriptionRecord> consumer) {
-    addMessageListener(topic, Schema.WorkflowInstanceSubscriptionRecord::parseFrom, consumer);
-  }
+    public Builder addMessageListener(Consumer<Schema.MessageRecord> listener) {
+      addListener(Schema.MessageRecord.class, listener);
+      return this;
+    }
 
-  private <T extends GeneratedMessageV3> void addMessageListener(
-      String topicName,
-      ZeebeHazelcastMessageListener.MessageDeserializer<T> deserializer,
-      Consumer<T> consumer) {
+    public Builder addMessageSubscriptionListener(
+            Consumer<Schema.MessageSubscriptionRecord> listener) {
+      addListener(Schema.MessageSubscriptionRecord.class, listener);
+      return this;
+    }
 
-    final ITopic<byte[]> topic = hazelcastInstance.getTopic(topicName);
-    final ZeebeHazelcastMessageListener<T> listener =
-        new ZeebeHazelcastMessageListener<>(deserializer, consumer);
+    public Builder addMessageStartEventSubscriptionListener(
+            Consumer<Schema.MessageStartEventSubscriptionRecord> listener) {
+      addListener(Schema.MessageStartEventSubscriptionRecord.class, listener);
+      return this;
+    }
 
-    topic.addMessageListener(listener);
-  }
+    public Builder addWorkflowInstanceSubscriptionListener(
+            Consumer<Schema.WorkflowInstanceSubscriptionRecord> listener) {
+      addListener(Schema.WorkflowInstanceSubscriptionRecord.class, listener);
+      return this;
+    }
 
-  private String getTopicName(ValueType valueType) {
-    return "zeebe-" + valueType;
+    public Builder addWorkflowInstanceCreationListener(
+            Consumer<Schema.WorkflowInstanceCreationRecord> listener) {
+      addListener(Schema.WorkflowInstanceCreationRecord.class, listener);
+      return this;
+    }
+
+    public Builder addWorkflowInstanceResultListener(
+            Consumer<Schema.WorkflowInstanceResultRecord> listener) {
+      addListener(Schema.WorkflowInstanceResultRecord.class, listener);
+      return this;
+    }
+
+    public Builder addErrorListener(Consumer<Schema.ErrorRecord> listener) {
+      addListener(Schema.ErrorRecord.class, listener);
+      return this;
+    }
+
+    private long getSequence(Ringbuffer<?> ringbuffer) {
+
+      final var headSequence = ringbuffer.headSequence();
+      final var tailSequence = ringbuffer.tailSequence();
+
+      if (readFromSequence > 0) {
+        if (readFromSequence > (tailSequence + 1)) {
+          LOGGER.info(
+                  "The given sequence '{}' is greater than the current tail-sequence '{}' of the ringbuffer. Using the head-sequence instead.",
+                  readFromSequence,
+                  tailSequence);
+          return headSequence;
+        } else {
+          return readFromSequence;
+        }
+
+      } else if (readFromHead) {
+        return headSequence;
+
+      } else {
+        return Math.max(headSequence, tailSequence);
+      }
+    }
+
+    /**
+     * Start a background task that reads from the ringbuffer and invokes the listeners. After an
+     * item is read and the listeners are invoked, the sequence is incremented (at-least-once
+     * semantic). <br>
+     * The current sequence is returned by {@link #getSequence()}. <br>
+     * Call {@link #close()} to stop reading.
+     */
+    public ZeebeHazelcast build() {
+
+      LOGGER.debug("Read from ringbuffer with name '{}'", name);
+      final Ringbuffer<byte[]> ringbuffer = hazelcastInstance.getRingbuffer(name);
+
+      if (ringbuffer == null) {
+        throw new IllegalArgumentException(
+                String.format("No ring buffer found with name '%s'", name));
+      }
+
+      LOGGER.debug(
+              "Ringbuffer status: [head: {}, tail: {}, size: {}, capacity: {}]",
+              ringbuffer.headSequence(),
+              ringbuffer.tailSequence(),
+              ringbuffer.size(),
+              ringbuffer.capacity());
+
+      final long sequence = getSequence(ringbuffer);
+      LOGGER.info("Read from ringbuffer '{}' starting from sequence '{}'", name, sequence);
+
+      final var zeebeHazelcast =
+              new ZeebeHazelcast(hazelcastInstance, ringbuffer, sequence, listeners);
+      zeebeHazelcast.start();
+
+      return zeebeHazelcast;
+    }
   }
 }
