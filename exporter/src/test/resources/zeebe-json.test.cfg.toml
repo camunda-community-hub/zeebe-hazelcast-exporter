@@ -1,0 +1,6 @@
+[[exporters]]
+id = "hazelcast"
+className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
+
+    [exporters.args]
+    format = "json"

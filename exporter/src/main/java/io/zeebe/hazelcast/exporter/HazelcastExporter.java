@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,6 +29,8 @@ public class HazelcastExporter implements Exporter {
 
   private HazelcastInstance hazelcast;
   private Ringbuffer<byte[]> ringbuffer;
+
+  private Function<Record, byte[]> recordTransformer;
 
   @Override
   public void configure(Context context) {
@@ -55,6 +58,23 @@ public class HazelcastExporter implements Exporter {
                 return enabledValueTypes.contains(valueType);
               }
             });
+
+    configureFormat();
+  }
+
+  private void configureFormat() {
+    if (config.format.equalsIgnoreCase("protobuf")) {
+      recordTransformer = this::recordToProtobuf;
+
+    } else if (config.format.equalsIgnoreCase("json")) {
+      recordTransformer = this::recordToJson;
+
+    } else {
+      throw new IllegalArgumentException(
+              String.format(
+                      "Expected the parameter 'format' to be one fo 'protobuf' or 'json' but was '%s'",
+                      config.format));
+    }
   }
 
   private Stream<String> parseList(String list) {
@@ -112,15 +132,20 @@ public class HazelcastExporter implements Exporter {
   public void export(Record record) {
 
     if (ringbuffer != null) {
-      final byte[] protobuf = transformRecord(record);
-      ringbuffer.add(protobuf);
+      final byte[] transformedRecord = recordTransformer.apply(record);
+      ringbuffer.add(transformedRecord);
     }
 
     controller.updateLastExportedRecordPosition(record.getPosition());
   }
 
-  private byte[] transformRecord(Record record) {
+  private byte[] recordToProtobuf(Record record) {
     final Schema.Record dto = RecordTransformer.toGenericRecord(record);
     return dto.toByteArray();
+  }
+
+  private byte[] recordToJson(Record record) {
+    final var json = record.toJson();
+    return json.getBytes();
   }
 }

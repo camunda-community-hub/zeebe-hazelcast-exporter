@@ -9,6 +9,8 @@ public class ExporterConfiguration {
   public int capacity = -1;
   public int timeToLiveInSeconds = -1;
 
+  public String format = "protobuf";
+
   public String enabledValueTypes = "JOB,WORKFLOW_INSTANCE,DEPLOYMENT,INCIDENT";
   public String enabledRecordTypes = "EVENT";
 
@@ -26,6 +28,8 @@ public class ExporterConfiguration {
             + capacity
             + ", timeToLiveInSeconds="
             + timeToLiveInSeconds
+            + ", format="
+            + format
             + "]";
   }
 }

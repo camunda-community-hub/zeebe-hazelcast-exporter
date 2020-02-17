@@ -89,6 +89,7 @@ In the Zeebe configuration file, you can change
 * the ringbuffer's name
 * the ringbuffer's capacity
 * the ringbuffer's time-to-live
+* the record serialization format
 
 Default values:
 
@@ -115,6 +116,9 @@ className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
 
     # Hazelcast ringbuffer's time-to-live in seconds
     timeToLiveInSeconds = 3600
+
+    # record serialization format: [protobuf|json]
+    format = "protobuf"
 ```
 
 ## Build it from Source
