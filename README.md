@@ -146,7 +146,7 @@ docker run zelldon/zeebe-hazelcast:TAG
 To publish the latest version:
 
 ```
-docker build --build-arg EXPORTERJAR=exporter/target/zeebe-hazelcast-exporter-0.8.0-SNAPSHOT-jar-with-dependencies.jar -t <username>/repo:TAG .
+docker build --build-arg EXPORTERJAR=exporter/target/zeebe-hazelcast-exporter-0.8.0-alpha1-jar-with-dependencies.jar -t <username>/repo:TAG .
 docker publish <username>/repo:TAG
 ```
 
