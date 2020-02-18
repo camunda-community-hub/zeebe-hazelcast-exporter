@@ -132,7 +132,7 @@ The exporter and the Java connector can be built with Maven
 The docker image can build like this:
 
 ```
-docker build --build-arg EXPORTERJAR=exporter/target/zeebe-hazelcast-exporter-0.8.0-SNAPSHOT-jar-with-dependencies.jar .
+docker build --build-arg EXPORTERJAR=exporter/target/zeebe-hazelcast-exporter-0.8.0-alpha1-jar-with-dependencies.jar .
 ```
 
 The latest image is also published under https://hub.docker.com/repository/docker/zelldon/zeebe-hazelcast
