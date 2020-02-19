@@ -64,6 +64,20 @@ Example usage:
 
 ## Install
 
+### Docker
+
+A bundled docker image is available under https://hub.docker.com/repository/docker/zelldon/zeebe-hazelcast.
+
+It is based on the Zeebe image and adds the Hazelcast exporter to it. 
+
+Run the Docker command:
+
+```
+docker run zelldon/zeebe-hazelcast:TAG
+```
+
+### Manually
+
 Before you start the broker, copy the exporter JAR  into the lib folder of the broker.
 
 ```
@@ -133,14 +147,6 @@ The docker image can build like this:
 
 ```
 docker build --build-arg EXPORTERJAR=exporter/target/zeebe-hazelcast-exporter-0.8.0-alpha1-jar-with-dependencies.jar .
-```
-
-The latest image is also published under https://hub.docker.com/repository/docker/zelldon/zeebe-hazelcast
-
-You can just run:
-
-```
-docker run zelldon/zeebe-hazelcast:TAG
 ```
 
 To publish the latest version:
