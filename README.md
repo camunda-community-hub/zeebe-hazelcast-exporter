@@ -64,6 +64,20 @@ Example usage:
 
 ## Install
 
+### Docker
+
+A bundled docker image is available under https://hub.docker.com/repository/docker/zelldon/zeebe-hazelcast.
+
+It is based on the Zeebe image and adds the Hazelcast exporter to it. 
+
+Run the Docker command:
+
+```
+docker run zelldon/zeebe-hazelcast:TAG
+```
+
+### Manually
+
 Before you start the broker, copy the exporter JAR  into the lib folder of the broker.
 
 ```
@@ -126,6 +140,22 @@ className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
 The exporter and the Java connector can be built with Maven
 
 `mvn clean install`
+
+## Build Docker image
+
+The docker image can build like this:
+
+```
+docker build --build-arg EXPORTERJAR=exporter/target/zeebe-hazelcast-exporter-0.8.0-alpha1-jar-with-dependencies.jar .
+```
+
+To publish the latest version:
+
+```
+docker build --build-arg EXPORTERJAR=exporter/target/zeebe-hazelcast-exporter-0.8.0-alpha1-jar-with-dependencies.jar -t <username>/repo:TAG .
+docker publish <username>/repo:TAG
+```
+
 
 ## Code of Conduct
 
