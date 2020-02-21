@@ -29,4 +29,4 @@ WORKDIR ${EXPORTER_HOME}
 # Zeebe containers should mount a real volume at /usr/share/zeebe/exporters; on start up, those containers should
 # then append the configuration of the exporter to their own configuration
 VOLUME ${SHARED_DIR}
-ENTRYPOINT ["entrypoint.sh"]
+ENTRYPOINT ["./entrypoint.sh"]

@@ -1,0 +1,63 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zeebe
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: True
+  ports:
+    - port: 26500
+      name: grpc
+    - port: 9600
+      name: monitoring
+    - port: 26502
+      name: cluster
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zeebe
+spec:
+  serviceName: zeebe
+  replicas: 1
+  podManagementPolicy: Parallel
+  template:
+    spec:
+      volumes:
+        - name: exporters
+          emptyDir: {}
+      initContainers:
+        - name: hazelcast
+          image: gcr.io/zeebe-io/zeebe-hazelcast-exporter:0.8.0-SNAPSHOT
+          volumeMounts:
+            - name: exporters
+              mountPath: /usr/share/zeebe/exporters
+      containers:
+        - name: broker
+          image: camunda/zeebe:latest
+          ports:
+            - containerPort: 26500
+              name: gateway
+            - containerPort: 26501
+              name: command
+            - containerPort: 26502
+              name: cluster
+            - containerPort: 9600
+              name: monitoring
+          env:
+            - name: ZEEBE_CLUSTER_SIZE
+              value: "1"
+            - name: ZEEBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: exporters
+              mountPath: /usr/share/zeebe/exporters
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: monitoring
+            initialDelaySeconds: 20
+            periodSeconds: 5
