@@ -19,20 +19,33 @@ kind: StatefulSet
 metadata:
   name: zeebe
 spec:
+  selector:
+    matchLabels:
+      app: zeebe
   serviceName: zeebe
   replicas: 1
   podManagementPolicy: Parallel
   template:
+    metadata:
+      labels:
+        app: zeebe
     spec:
       volumes:
         - name: exporters
           emptyDir: {}
+        - name: config
+          emptyDir: {}
       initContainers:
         - name: hazelcast
           image: gcr.io/zeebe-io/zeebe-hazelcast-exporter:0.8.0-SNAPSHOT
+          env:
+            - name: CONFIG_PATH
+              value: /usr/local/zeebe/conf/zeebe.cfg.toml
           volumeMounts:
             - name: exporters
               mountPath: /usr/share/zeebe/exporters
+            - name: config
+              mountPath: /usr/local/zeebe/conf
       containers:
         - name: broker
           image: camunda/zeebe:latest
@@ -55,6 +68,9 @@ spec:
           volumeMounts:
             - name: exporters
               mountPath: /usr/share/zeebe/exporters
+            - name: config
+              mountPath: /usr/local/zeebe/conf/zeebe.cfg.toml
+              subPath: zeebe.cfg.toml
           readinessProbe:
             httpGet:
               path: /ready
