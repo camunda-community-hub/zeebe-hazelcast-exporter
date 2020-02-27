@@ -19,7 +19,10 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -166,6 +169,51 @@ public class ExporterTest {
     // then
     assertThat(sequence2).isGreaterThan(sequence1);
     assertThat(sequence3).isGreaterThan(sequence2);
+  }
+
+  @Test
+  public void shouldInvokePostProcessListener() {
+    // given
+    final List<Long> invocations = new ArrayList<>();
+
+    final List<Schema.DeploymentRecord> deploymentRecords = new ArrayList<>();
+    final List<Schema.WorkflowInstanceRecord> wfRecords = new ArrayList<>();
+    final List<Schema.JobRecord> jobRecords = new ArrayList<>();
+
+    zeebeHazelcast =
+            ZeebeHazelcast.newBuilder(hz)
+                    .addDeploymentListener(deploymentRecords::add)
+                    .addWorkflowInstanceListener(wfRecords::add)
+                    .addJobListener(jobRecords::add)
+                    .postProcessListener(invocations::add)
+                    .build();
+
+    final var initialSequence = zeebeHazelcast.getSequence();
+
+    // when
+    client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
+    client
+            .newCreateInstanceCommand()
+            .bpmnProcessId("process")
+            .latestVersion()
+            .variables(Map.of("foo", "bar"))
+            .send()
+            .join();
+
+    TestUtil.waitUntil(() -> jobRecords.size() >= 1);
+    TestUtil.waitUntil(
+            () ->
+                    invocations.size() >= deploymentRecords.size() + wfRecords.size() + jobRecords.size());
+
+    final var lastSequence = zeebeHazelcast.getSequence();
+
+    // then
+    final var expectedSequence =
+            LongStream.rangeClosed(initialSequence + 1, lastSequence)
+                    .boxed()
+                    .collect(Collectors.toList());
+
+    assertThat(invocations).isEqualTo(expectedSequence);
   }
 
   @Test
