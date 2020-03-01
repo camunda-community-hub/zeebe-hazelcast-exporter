@@ -55,7 +55,7 @@ public class ExporterTest {
   @Test
   public void shouldExportEventsAsProtobuf() throws Exception {
     // given
-    final Ringbuffer<byte[]> buffer = hz.getRingbuffer(CONFIGURATION.name);
+    final Ringbuffer<byte[]> buffer = hz.getRingbuffer(CONFIGURATION.getName());
 
     var sequence = buffer.headSequence();
 

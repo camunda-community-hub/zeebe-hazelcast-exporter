@@ -55,7 +55,7 @@ public class ExporterJsonTest {
     @Test
     public void shouldExportEventsAsProtobuf() throws Exception {
         // given
-        final Ringbuffer<byte[]> buffer = hz.getRingbuffer(CONFIGURATION.name);
+        final Ringbuffer<byte[]> buffer = hz.getRingbuffer(CONFIGURATION.getName());
 
         var sequence = buffer.headSequence();
 
@@ -72,7 +72,7 @@ public class ExporterJsonTest {
                 .startsWith("{")
                 .endsWith("}")
                 .contains("\"valueType\":\"DEPLOYMENT\"")
-                .contains("\"recordType\":\"EVENT\"")
-                .contains("\"intent\":\"CREATED\"");
+                .contains("\"recordType\":\"COMMAND\"")
+                .contains("\"intent\":\"CREATE\"");
     }
 }

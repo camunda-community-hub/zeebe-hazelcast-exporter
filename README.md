@@ -40,8 +40,6 @@ final ZeebeHazelcast zeebeHazelcast = ZeebeHazelcast.newBuilder(hz)
 
 // ...
 
-long sequence = zeebeHazelcast.getSequence();
-
 zeebeHazelcast.close();
 ```
 
@@ -116,11 +114,11 @@ className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
     # Hazelcast port
     port = 5701
     
-    # comma separated list of io.zeebe.protocol.record.ValueType
-    enabledValueTypes = "JOB,WORKFLOW_INSTANCE,DEPLOYMENT,INCIDENT"
+    # comma separated list of io.zeebe.protocol.record.ValueType to export or empty to export all types 
+    enabledValueTypes = ""
     
-    # comma separated list of io.zeebe.protocol.record.RecordType
-    enabledRecordTypes = "EVENT"
+    # comma separated list of io.zeebe.protocol.record.RecordType to export or empty to export all types
+    enabledRecordTypes = ""
         
     # Hazelcast ringbuffer's name
     name = "zeebe"
@@ -134,6 +132,8 @@ className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
     # record serialization format: [protobuf|json]
     format = "protobuf"
 ```
+
+The values can be overridden by environment variables with the same name and a `ZEEBE_HAZELCAST_` prefix (e.g. `ZEEBE_HAZELCAST_PORT`). 
 
 ## Build it from Source
 
