@@ -11,15 +11,9 @@ import io.zeebe.exporter.api.context.Controller;
 import io.zeebe.exporter.proto.RecordTransformer;
 import io.zeebe.exporter.proto.Schema;
 import io.zeebe.protocol.record.Record;
-import io.zeebe.protocol.record.RecordType;
-import io.zeebe.protocol.record.ValueType;
 import org.slf4j.Logger;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class HazelcastExporter implements Exporter {
 
@@ -39,46 +33,26 @@ public class HazelcastExporter implements Exporter {
 
     logger.debug("Starting exporter with configuration: {}", config);
 
-    final List<RecordType> enabledRecordTypes =
-            parseList(config.enabledRecordTypes).map(RecordType::valueOf).collect(Collectors.toList());
-
-    final List<ValueType> enabledValueTypes =
-            parseList(config.enabledValueTypes).map(ValueType::valueOf).collect(Collectors.toList());
-
-    context.setFilter(
-            new Context.RecordFilter() {
-
-              @Override
-              public boolean acceptType(RecordType recordType) {
-                return enabledRecordTypes.contains(recordType);
-              }
-
-              @Override
-              public boolean acceptValue(ValueType valueType) {
-                return enabledValueTypes.contains(valueType);
-              }
-            });
+    final var filter = new HazelcastRecordFilter(config);
+    context.setFilter(filter);
 
     configureFormat();
   }
 
   private void configureFormat() {
-    if (config.format.equalsIgnoreCase("protobuf")) {
+    final var format = config.getFormat();
+    if (format.equalsIgnoreCase("protobuf")) {
       recordTransformer = this::recordToProtobuf;
 
-    } else if (config.format.equalsIgnoreCase("json")) {
+    } else if (format.equalsIgnoreCase("json")) {
       recordTransformer = this::recordToJson;
 
     } else {
       throw new IllegalArgumentException(
               String.format(
                       "Expected the parameter 'format' to be one fo 'protobuf' or 'json' but was '%s'",
-                      config.format));
+                      format));
     }
-  }
-
-  private Stream<String> parseList(String list) {
-    return Arrays.stream(list.split(",")).map(String::trim).map(String::toUpperCase);
   }
 
   @Override
@@ -88,10 +62,10 @@ public class HazelcastExporter implements Exporter {
     final Config cfg = buildHazelcastConfig();
     hazelcast = Hazelcast.newHazelcastInstance(cfg);
 
-    ringbuffer = hazelcast.getRingbuffer(config.name);
+    ringbuffer = hazelcast.getRingbuffer(config.getName());
     if (ringbuffer == null) {
       throw new IllegalStateException(
-              String.format("Failed to open ringbuffer with name '%s'", config.name));
+              String.format("Failed to open ringbuffer with name '%s'", config.getName()));
     }
 
     logger.info(
@@ -106,16 +80,16 @@ public class HazelcastExporter implements Exporter {
   private Config buildHazelcastConfig() {
 
     final Config cfg = new Config();
-    cfg.getNetworkConfig().setPort(config.port);
+    cfg.getNetworkConfig().setPort(config.getPort());
     cfg.setProperty("hazelcast.logging.type", "slf4j");
 
-    final var ringbufferConfig = new RingbufferConfig(config.name);
+    final var ringbufferConfig = new RingbufferConfig(config.getName());
 
-    if (config.capacity > 0) {
-      ringbufferConfig.setCapacity(config.capacity);
+    if (config.getCapacity() > 0) {
+      ringbufferConfig.setCapacity(config.getCapacity());
     }
-    if (config.timeToLiveInSeconds > 0) {
-      ringbufferConfig.setTimeToLiveSeconds(config.timeToLiveInSeconds);
+    if (config.getTimeToLiveInSeconds() > 0) {
+      ringbufferConfig.setTimeToLiveSeconds(config.getTimeToLiveInSeconds());
     }
 
     cfg.addRingBufferConfig(ringbufferConfig);

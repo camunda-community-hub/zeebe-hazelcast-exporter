@@ -91,12 +91,12 @@ public class ExporterTest {
 
     client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
 
-    TestUtil.waitUntil(() -> events.size() >= 2);
+    TestUtil.waitUntil(() -> events.size() >= 4);
 
     assertThat(events)
-            .hasSize(2)
+            .hasSize(4)
             .extracting(r -> r.getMetadata().getIntent())
-            .containsExactly("CREATED", "DISTRIBUTED");
+            .containsExactly("CREATE", "CREATED", "DISTRIBUTE", "DISTRIBUTED");
   }
 
   @Test
@@ -115,12 +115,12 @@ public class ExporterTest {
             .send()
             .join();
 
-    TestUtil.waitUntil(() -> events.size() >= 1);
+    TestUtil.waitUntil(() -> events.size() >= 2);
 
     assertThat(events)
-        .hasSize(1)
-        .extracting(r -> r.getMetadata().getIntent())
-        .containsExactly("CREATED");
+            .hasSize(2)
+            .extracting(r -> r.getMetadata().getIntent())
+            .containsExactly("CREATE", "CREATED");
   }
 
   @Test
@@ -133,12 +133,12 @@ public class ExporterTest {
 
     client.newCreateInstanceCommand().bpmnProcessId("process").latestVersion().send().join();
 
-    TestUtil.waitUntil(() -> events.size() >= 1);
+    TestUtil.waitUntil(() -> events.size() >= 2);
 
     assertThat(events)
-            .hasSize(1)
+            .hasSize(2)
             .extracting(r -> r.getMetadata().getIntent())
-            .containsExactly("CREATED");
+            .containsExactly("CREATE", "CREATED");
   }
 
   @Test
@@ -229,7 +229,7 @@ public class ExporterTest {
                     .build();
 
     client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
-    TestUtil.waitUntil(() -> deploymentRecords.size() >= 2);
+    TestUtil.waitUntil(() -> deploymentRecords.size() >= 4);
 
     zeebeHazelcast.close();
     deploymentRecords.clear();
@@ -246,7 +246,7 @@ public class ExporterTest {
     TestUtil.waitUntil(() -> wfRecords.size() >= 4);
 
     // then
-    assertThat(deploymentRecords).hasSize(2);
+    assertThat(deploymentRecords).hasSize(4);
   }
 
   @Test
@@ -259,7 +259,7 @@ public class ExporterTest {
             ZeebeHazelcast.newBuilder(hz).addDeploymentListener(deploymentRecords::add).build();
 
     client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
-    TestUtil.waitUntil(() -> deploymentRecords.size() >= 2);
+    TestUtil.waitUntil(() -> deploymentRecords.size() >= 4);
 
     zeebeHazelcast.close();
     deploymentRecords.clear();
@@ -289,7 +289,7 @@ public class ExporterTest {
             ZeebeHazelcast.newBuilder(hz).addDeploymentListener(deploymentRecords::add).build();
 
     client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
-    TestUtil.waitUntil(() -> deploymentRecords.size() >= 2);
+    TestUtil.waitUntil(() -> deploymentRecords.size() >= 4);
 
     final var sequence = zeebeHazelcast.getSequence();
 
