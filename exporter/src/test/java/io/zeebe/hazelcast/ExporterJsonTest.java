@@ -24,7 +24,7 @@ public class ExporterJsonTest {
             Bpmn.createExecutableProcess("process")
                     .startEvent("start")
                     .sequenceFlowId("to-task")
-                    .serviceTask("task", s -> s.zeebeTaskType("test"))
+                    .serviceTask("task", s -> s.zeebeJobType("test"))
                     .sequenceFlowId("to-end")
                     .endEvent("end")
                     .done();
@@ -33,7 +33,7 @@ public class ExporterJsonTest {
 
     @Rule
     public final ZeebeTestRule testRule =
-            new ZeebeTestRule("zeebe-json.test.cfg.toml", Properties::new);
+            new ZeebeTestRule("application-json.yaml", Properties::new);
 
     private ZeebeClient client;
     private HazelcastInstance hz;
