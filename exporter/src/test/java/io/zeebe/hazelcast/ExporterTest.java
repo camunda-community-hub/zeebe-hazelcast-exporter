@@ -23,9 +23,9 @@ public class ExporterTest {
 
   private static final BpmnModelInstance WORKFLOW =
       Bpmn.createExecutableProcess("process")
-          .startEvent("start")
-          .sequenceFlowId("to-task")
-          .serviceTask("task", s -> s.zeebeTaskType("test"))
+              .startEvent("start")
+              .sequenceFlowId("to-task")
+              .serviceTask("task", s -> s.zeebeJobType("test"))
           .sequenceFlowId("to-end")
           .endEvent("end")
           .done();
@@ -33,7 +33,7 @@ public class ExporterTest {
   private static final ExporterConfiguration CONFIGURATION = new ExporterConfiguration();
 
   @Rule
-  public final ZeebeTestRule testRule = new ZeebeTestRule("zeebe.test.cfg.toml", Properties::new);
+  public final ZeebeTestRule testRule = new ZeebeTestRule("application.yaml", Properties::new);
 
   private ZeebeClient client;
   private HazelcastInstance hz;

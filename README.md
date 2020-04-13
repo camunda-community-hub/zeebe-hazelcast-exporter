@@ -74,7 +74,7 @@ Run the Docker command:
 docker run zelldon/zeebe-hazelcast:TAG
 ```
 
-### Manually
+### Manual
 
 Before you start the broker, copy the exporter JAR  into the lib folder of the broker.
 
@@ -88,6 +88,18 @@ Register the exporter in the Zeebe configuration file `~/zeebe-broker-%{VERSION}
 [[exporters]]
 id = "hazelcast"
 className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
+jarPath = "exporters/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar"
+```
+
+For version >= 0.23.0-alpha2 `~/zeebe-broker-%{VERSION}/conf/application.yaml`
+
+```
+zeebe:
+  broker:  
+    exporters:
+      hazelcast:
+        className: io.zeebe.hazelcast.exporter.HazelcastExporter
+        jarPath: exporters/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar
 ```
 
 Now start the broker and the applications.
