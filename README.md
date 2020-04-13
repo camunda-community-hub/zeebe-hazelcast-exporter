@@ -73,13 +73,16 @@ docker-compose up
 
 ### Manual
 
-1. Before starting the broker, copy the exporter JAR  into the broker folder `~/zeebe-broker-%{VERSION}/exporters`.
+1. Download the latest [Zeebe distribution](https://github.com/zeebe-io/zeebe/releases) _(zeebe-distribution-%{VERSION}.tar.gz
+)_
+
+1. Copy the exporter JAR  into the broker folder `~/zeebe-broker-%{VERSION}/exporters`.
 
 ```
 cp exporter/target/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar ~/zeebe-broker-%{VERSION}/exporters/
 ```
 
-2. Add the exporter to the broker configuration `~/zeebe-broker-%{VERSION}/config/application.yaml`:
+1. Add the exporter to the broker configuration `~/zeebe-broker-%{VERSION}/config/application.yaml`:
 
 ```
 zeebe:
@@ -99,7 +102,8 @@ className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
 jarPath = "exporters/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar"
 ```
 
-3. Now, start the broker.
+1. Start the broker
+    `~/zeebe-broker-%{VERSION}/bin/broker`
 
 ### Configuration
 
