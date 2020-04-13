@@ -64,34 +64,22 @@ Example usage:
 
 ### Docker
 
-A bundled docker image is available under https://hub.docker.com/repository/docker/zelldon/zeebe-hazelcast.
-
-It is based on the Zeebe image and adds the Hazelcast exporter to it. 
-
-Run the Docker command:
+For a local setup, the repository contains a [docker-compose file](docker/docker-compose.yml). It starts a Zeebe broker with the Hazelcast exporter. The version of the exporter is defined in the `.env` file. 
 
 ```
-docker run zelldon/zeebe-hazelcast:TAG
+cd docker
+docker-compose up
 ```
 
 ### Manual
 
-Before you start the broker, copy the exporter JAR  into the lib folder of the broker.
+1. Before starting the broker, copy the exporter JAR  into the broker folder `~/zeebe-broker-%{VERSION}/exporters`.
 
 ```
-cp exporter/target/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar ~/zeebe-broker-%{VERSION}/lib/
+cp exporter/target/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar ~/zeebe-broker-%{VERSION}/exporters/
 ```
 
-Register the exporter in the Zeebe configuration file `~/zeebe-broker-%{VERSION}/config/zeebe.cfg.toml`.
-
-```
-[[exporters]]
-id = "hazelcast"
-className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
-jarPath = "exporters/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar"
-```
-
-For version >= 0.23.0-alpha2 `~/zeebe-broker-%{VERSION}/conf/application.yaml`
+2. Add the exporter to the broker configuration `~/zeebe-broker-%{VERSION}/config/application.yaml`:
 
 ```
 zeebe:
@@ -102,7 +90,16 @@ zeebe:
         jarPath: exporters/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar
 ```
 
-Now start the broker and the applications.
+For broker version < 0.23.0-alpha2 `~/zeebe-broker-%{VERSION}/conf/zeebe.cfg.toml`:
+
+```
+[[exporters]]
+id = "hazelcast"
+className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
+jarPath = "exporters/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar"
+```
+
+3. Now, start the broker.
 
 ### Configuration
 
@@ -152,22 +149,6 @@ The values can be overridden by environment variables with the same name and a `
 The exporter and the Java connector can be built with Maven
 
 `mvn clean install`
-
-## Build Docker image
-
-The docker image can build like this:
-
-```
-docker build --build-arg EXPORTERJAR=exporter/target/zeebe-hazelcast-exporter-0.8.0-alpha1-jar-with-dependencies.jar .
-```
-
-To publish the latest version:
-
-```
-docker build --build-arg EXPORTERJAR=exporter/target/zeebe-hazelcast-exporter-0.8.0-alpha1-jar-with-dependencies.jar -t <username>/repo:TAG .
-docker publish <username>/repo:TAG
-```
-
 
 ## Code of Conduct
 

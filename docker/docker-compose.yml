@@ -1,0 +1,21 @@
+version: "2"
+
+networks:
+  zeebe_network:
+    driver: bridge
+
+services:
+  zeebe:
+    container_name: zeebe_broker
+    image: camunda/zeebe:0.23.0
+    environment:
+      - ZEEBE_LOG_LEVEL=debug
+    ports:
+      - "26500:26500"
+      - "9600:9600"
+      - "5701:5701"
+    volumes:
+      - ../exporter/target/zeebe-hazelcast-exporter-${EXPORTER_VERSION}-jar-with-dependencies.jar:/usr/local/zeebe/exporters/zeebe-hazelcast-exporter.jar
+      - ./application.yaml:/usr/local/zeebe/config/application.yaml
+    networks:
+      - zeebe_network
