@@ -78,29 +78,29 @@ docker-compose up
 
 1. Copy the exporter JAR  into the broker folder `~/zeebe-broker-%{VERSION}/exporters`.
 
-```
-cp exporter/target/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar ~/zeebe-broker-%{VERSION}/exporters/
-```
+    ```
+    cp exporter/target/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar ~/zeebe-broker-%{VERSION}/exporters/
+    ```
 
 1. Add the exporter to the broker configuration `~/zeebe-broker-%{VERSION}/config/application.yaml`:
 
-```
-zeebe:
-  broker:  
-    exporters:
-      hazelcast:
-        className: io.zeebe.hazelcast.exporter.HazelcastExporter
-        jarPath: exporters/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar
-```
+    ```
+    zeebe:
+      broker:  
+        exporters:
+          hazelcast:
+            className: io.zeebe.hazelcast.exporter.HazelcastExporter
+            jarPath: exporters/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar
+    ```
 
-For broker version < 0.23.0-alpha2 `~/zeebe-broker-%{VERSION}/conf/zeebe.cfg.toml`:
-
-```
-[[exporters]]
-id = "hazelcast"
-className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
-jarPath = "exporters/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar"
-```
+    For broker version < 0.23.0-alpha2 `~/zeebe-broker-%{VERSION}/conf/zeebe.cfg.toml`:
+    
+    ```
+    [[exporters]]
+    id = "hazelcast"
+    className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
+    jarPath = "exporters/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar"
+    ```
 
 1. Start the broker
     `~/zeebe-broker-%{VERSION}/bin/broker`
