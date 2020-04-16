@@ -67,6 +67,7 @@ Example usage:
 For a local setup, the repository contains a [docker-compose file](docker/docker-compose.yml). It starts a Zeebe broker with the Hazelcast exporter. The version of the exporter is defined in the `.env` file. 
 
 ```
+mvn clean install -DskipTests
 cd docker
 docker-compose up
 ```
