@@ -1,5 +1,7 @@
 package io.zeebe.hazelcast.exporter;
 
+import com.hazelcast.client.HazelcastClient;
+import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.RingbufferConfig;
 import com.hazelcast.core.Hazelcast;
@@ -13,6 +15,7 @@ import io.zeebe.exporter.proto.Schema;
 import io.zeebe.protocol.record.Record;
 import org.slf4j.Logger;
 
+import java.time.Duration;
 import java.util.function.Function;
 
 public class HazelcastExporter implements Exporter {
@@ -59,8 +62,11 @@ public class HazelcastExporter implements Exporter {
   public void open(Controller controller) {
     this.controller = controller;
 
-    final Config cfg = buildHazelcastConfig();
-    hazelcast = Hazelcast.newHazelcastInstance(cfg);
+    hazelcast =
+            config
+                    .getRemoteAddress()
+                    .map(this::connectToHazelcast)
+                    .orElseGet(this::createHazelcastInstance);
 
     ringbuffer = hazelcast.getRingbuffer(config.getName());
     if (ringbuffer == null) {
@@ -77,24 +83,44 @@ public class HazelcastExporter implements Exporter {
             ringbuffer.capacity());
   }
 
-  private Config buildHazelcastConfig() {
+  private HazelcastInstance createHazelcastInstance() {
+    final var port = this.config.getPort();
 
-    final Config cfg = new Config();
-    cfg.getNetworkConfig().setPort(config.getPort());
-    cfg.setProperty("hazelcast.logging.type", "slf4j");
+    final var hzConfig = new Config();
+    hzConfig.getNetworkConfig().setPort(port);
+    hzConfig.setProperty("hazelcast.logging.type", "slf4j");
 
-    final var ringbufferConfig = new RingbufferConfig(config.getName());
+    final var ringbufferConfig = new RingbufferConfig(this.config.getName());
 
-    if (config.getCapacity() > 0) {
-      ringbufferConfig.setCapacity(config.getCapacity());
+    if (this.config.getCapacity() > 0) {
+      ringbufferConfig.setCapacity(this.config.getCapacity());
     }
-    if (config.getTimeToLiveInSeconds() > 0) {
-      ringbufferConfig.setTimeToLiveSeconds(config.getTimeToLiveInSeconds());
+    if (this.config.getTimeToLiveInSeconds() > 0) {
+      ringbufferConfig.setTimeToLiveSeconds(this.config.getTimeToLiveInSeconds());
     }
 
-    cfg.addRingBufferConfig(ringbufferConfig);
+    hzConfig.addRingBufferConfig(ringbufferConfig);
 
-    return cfg;
+    logger.info("Creating new in-memory Hazelcast instance [port: {}]", port);
+
+    return Hazelcast.newHazelcastInstance(hzConfig);
+  }
+
+  private HazelcastInstance connectToHazelcast(String remoteAddress) {
+
+    final var clientConfig = new ClientConfig();
+    clientConfig.setProperty("hazelcast.logging.type", "slf4j");
+
+    final var networkConfig = clientConfig.getNetworkConfig();
+
+    networkConfig.addAddress(remoteAddress);
+
+    networkConfig.setConnectionAttemptPeriod((int) Duration.ofSeconds(10).toMillis());
+    networkConfig.setConnectionAttemptLimit(0); // try forever
+
+    logger.info("Connecting to remote Hazelcast instance [address: {}]", remoteAddress);
+
+    return HazelcastClient.newHazelcastClient(clientConfig);
   }
 
   @Override

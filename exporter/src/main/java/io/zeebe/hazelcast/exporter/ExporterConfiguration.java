@@ -8,6 +8,8 @@ public class ExporterConfiguration {
 
   private int port = 5701;
 
+  private String remoteAddress;
+
   private String name = "zeebe";
 
   private int capacity = -1;
@@ -46,6 +48,12 @@ public class ExporterConfiguration {
     return getEnv("ENABLED_RECORD_TYPES").orElse(enabledRecordTypes);
   }
 
+  public Optional<String> getRemoteAddress() {
+    return getEnv("REMOTE_ADDRESS")
+            .or(() -> Optional.ofNullable(remoteAddress))
+            .filter(remoteAddress -> !remoteAddress.isEmpty());
+  }
+
   private Optional<String> getEnv(String name) {
     return Optional.ofNullable(System.getenv(ENV_PREFIX + name));
   }
@@ -54,6 +62,8 @@ public class ExporterConfiguration {
   public String toString() {
     return "[port="
             + port
+            + ", remoteAddress="
+            + remoteAddress
             + ", name="
             + name
             + ", enabledValueTypes="
