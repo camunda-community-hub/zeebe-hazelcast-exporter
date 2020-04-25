@@ -15,7 +15,6 @@ import io.zeebe.exporter.proto.Schema;
 import io.zeebe.protocol.record.Record;
 import org.slf4j.Logger;
 
-import java.time.Duration;
 import java.util.function.Function;
 
 public class HazelcastExporter implements Exporter {
@@ -112,11 +111,7 @@ public class HazelcastExporter implements Exporter {
     clientConfig.setProperty("hazelcast.logging.type", "slf4j");
 
     final var networkConfig = clientConfig.getNetworkConfig();
-
     networkConfig.addAddress(remoteAddress);
-
-    networkConfig.setConnectionAttemptPeriod((int) Duration.ofSeconds(10).toMillis());
-    networkConfig.setConnectionAttemptLimit(0); // try forever
 
     logger.info("Connecting to remote Hazelcast instance [address: {}]", remoteAddress);
 

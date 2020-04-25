@@ -17,7 +17,7 @@
 
     <properties>
         <version.zeebe>0.23.1</version.zeebe>
-        <version.hazelcast>3.12.6</version.hazelcast>
+        <version.hazelcast>4.0.1</version.hazelcast>
         <version.exporter.protobuf>0.11.0</version.exporter.protobuf>
         <version.log4j>2.13.2</version.log4j>
 
@@ -64,13 +64,6 @@
                 <artifactId>hazelcast</artifactId>
                 <version>${version.hazelcast}</version>
             </dependency>
-
-            <dependency>
-                <groupId>com.hazelcast</groupId>
-                <artifactId>hazelcast-client</artifactId>
-                <version>${version.hazelcast}</version>
-            </dependency>
-
 
             <dependency>
                 <groupId>junit</groupId>
