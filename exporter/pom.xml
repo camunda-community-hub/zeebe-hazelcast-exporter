@@ -29,11 +29,6 @@
             <artifactId>hazelcast</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast-client</artifactId>
-        </dependency>
-
         <!-- test -->
         <dependency>
             <groupId>junit</groupId>
