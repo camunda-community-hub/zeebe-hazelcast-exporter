@@ -120,34 +120,82 @@ In the Zeebe configuration file, you can change
 Default values:
 
 ```
-[[exporters]]
-id = "hazelcast"
-className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
-
-    [exporters.args]
-    # Hazelcast port
-    port = 5701
+zeebe:
+  broker:
+    exporters:
+      hazelcast:
+        className: io.zeebe.hazelcast.exporter.HazelcastExporter
+        jarPath: exporters/zeebe-hazelcast-exporter.jar
+	args:
+	  # Hazelcast port
+    	  port = 5701
     
-    # comma separated list of io.zeebe.protocol.record.ValueType to export or empty to export all types 
-    enabledValueTypes = ""
+          # comma separated list of io.zeebe.protocol.record.ValueType to export or empty to export all types 
+          enabledValueTypes = ""
     
-    # comma separated list of io.zeebe.protocol.record.RecordType to export or empty to export all types
-    enabledRecordTypes = ""
+          # comma separated list of io.zeebe.protocol.record.RecordType to export or empty to export all types
+          enabledRecordTypes = ""
         
-    # Hazelcast ringbuffer's name
-    name = "zeebe"
+          # Hazelcast ringbuffer's name
+          name = "zeebe"
     
-    # Hazelcast ringbuffer's capacity
-    capacity = 10000 
+          # Hazelcast ringbuffer's capacity
+          capacity = 10000 
 
-    # Hazelcast ringbuffer's time-to-live in seconds
-    timeToLiveInSeconds = 3600
+          # Hazelcast ringbuffer's time-to-live in seconds
+          timeToLiveInSeconds = 3600
 
-    # record serialization format: [protobuf|json]
-    format = "protobuf"
+          # record serialization format: [protobuf|json]
+          format = "protobuf"
 ```
 
 The values can be overridden by environment variables with the same name and a `ZEEBE_HAZELCAST_` prefix (e.g. `ZEEBE_HAZELCAST_PORT`). 
+
+By default, the exporter creates an in-memory Hazelcast instance and publishes the records to it. But it can also be configured to export the records to a remote/external Hazecast instance by setting the argument `remoteAddress` or the environment variable `ZEEBE_HAZELCAST_REMOTE_ADDRESS` to the address of the remote Hazelcast instance.
+
+<details>
+  <summary>Full docker-compose.yml with external Hazelcast</summary>
+  <p>
+		
+```
+version: "2"
+
+networks:
+  zeebe_network:
+    driver: bridge
+
+services:
+  zeebe:
+    container_name: zeebe_broker
+    image: camunda/zeebe:0.23.1
+    environment:
+      - ZEEBE_LOG_LEVEL=debug
+      - ZEEBE_HAZELCAST_REMOTE_ADDRESS=hazelcast:5701
+    ports:
+      - "26500:26500"
+      - "9600:9600"
+    volumes:
+      - ../exporter/target/zeebe-hazelcast-exporter-${EXPORTER_VERSION}-jar-with-dependencies.jar:/usr/local/zeebe/exporters/zeebe-hazelcast-exporter.jar
+      - ./application.yaml:/usr/local/zeebe/config/application.yaml
+    networks:
+      - zeebe_network
+    depends_on:
+      - hazelcast
+
+  hazelcast:
+    container_name: hazelcast
+    image: hazelcast/hazelcast:4.0.1
+    ports:
+      - "5701:5701"
+    environment:
+      - JAVA_OPTS="-Dhazelcast.local.publicAddress=hazelcast:5701"
+    networks:
+      - zeebe_network
+```      
+
+</p>
+</details>
+	
 
 ## Build it from Source
 
