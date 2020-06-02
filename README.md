@@ -191,6 +191,16 @@ services:
       - JAVA_OPTS="-Dhazelcast.local.publicAddress=hazelcast:5701"
     networks:
       - zeebe_network
+      
+  hazelcast-management:
+    container_name: hazelcast-management
+    image: hazelcast/management-center:4.0.1
+    ports:
+      - "8083:8080"
+    networks:
+      - zeebe_network
+    depends_on:
+      - hazelcast    
 ```      
 
 </p>
