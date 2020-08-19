@@ -107,9 +107,7 @@
                     </from>
                     <to>
                         <image>docker.io/camunda/zeebe-with-hazelcast-exporter</image>
-                        <tags>
-                            <tag>${version.zeebe}-${project.version}</tag>
-                        </tags>
+                        <tags>latest,${version.zeebe}-${project.version}</tags>
                     </to>
                     <container>
                         <entrypoint>INHERIT</entrypoint>
