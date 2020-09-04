@@ -70,11 +70,11 @@ public class HazelcastExporter implements Exporter {
     ringbuffer = hazelcast.getRingbuffer(config.getName());
     if (ringbuffer == null) {
       throw new IllegalStateException(
-              String.format("Failed to open ringbuffer with name '%s'", config.getName()));
+              String.format("Failed to open ring-buffer with name '%s'", config.getName()));
     }
 
     logger.info(
-            "Export records to ringbuffer with name '{}' [head: {}, tail: {}, size: {}, capacity: {}]",
+            "Export records to ring-buffer with name '{}' [head: {}, tail: {}, size: {}, capacity: {}]",
             ringbuffer.getName(),
             ringbuffer.headSequence(),
             ringbuffer.tailSequence(),
@@ -128,7 +128,12 @@ public class HazelcastExporter implements Exporter {
 
     if (ringbuffer != null) {
       final byte[] transformedRecord = recordTransformer.apply(record);
-      ringbuffer.add(transformedRecord);
+
+      final var sequenceNumber = ringbuffer.add(transformedRecord);
+      logger.trace(
+              "Added a record to the ring-buffer [record-position: {}, ring-buffer sequence-number: {}]",
+              record.getPosition(),
+              sequenceNumber);
     }
 
     controller.updateLastExportedRecordPosition(record.getPosition());

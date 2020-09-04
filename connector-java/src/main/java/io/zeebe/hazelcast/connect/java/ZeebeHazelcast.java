@@ -3,6 +3,7 @@ package io.zeebe.hazelcast.connect.java;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.ringbuffer.Ringbuffer;
+import com.hazelcast.ringbuffer.StaleSequenceException;
 import io.zeebe.exporter.proto.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,8 @@ public class ZeebeHazelcast implements AutoCloseable {
   private Future<?> future;
   private ExecutorService executorService;
 
+  private volatile boolean isClosed = false;
+
   private ZeebeHazelcast(
           Ringbuffer<byte[]> ringbuffer,
           long sequence,
@@ -78,6 +81,8 @@ public class ZeebeHazelcast implements AutoCloseable {
   public void close() throws Exception {
     LOGGER.info("Closing. Stop reading from ringbuffer. Current sequence: '{}'", getSequence());
 
+    isClosed = true;
+
     if (future != null) {
       future.cancel(true);
     }
@@ -92,13 +97,13 @@ public class ZeebeHazelcast implements AutoCloseable {
   }
 
   private void readFromBuffer() {
-    while (true) {
+    while (!isClosed) {
       readNext();
     }
   }
 
   private void readNext() {
-    LOGGER.trace("Read from ringbuffer with sequence '{}'", sequence);
+    LOGGER.trace("Read from ring-buffer with sequence '{}'", sequence);
 
     try {
       final byte[] item = ringbuffer.readOne(sequence);
@@ -113,8 +118,43 @@ public class ZeebeHazelcast implements AutoCloseable {
     } catch (InvalidProtocolBufferException e) {
       LOGGER.error("Failed to deserialize Protobuf message at sequence '{}'", sequence, e);
 
+      sequence += 1;
+
+    } catch (StaleSequenceException e) {
+      // if the sequence is smaller than headSequence(). Because a Ringbuffer won't store all event
+      // indefinitely, it can be that the data for the given sequence doesn't exist anymore and the
+      // StaleSequenceException is thrown. It is up to the caller to deal with this particular
+      // situation, e.g. throw an Exception or restart from the last known head. That is why the
+      // StaleSequenceException contains the last known head.
+      final var headSequence = e.getHeadSeq();
+      LOGGER.warn(
+              "Fail to read from ring-buffer at sequence '{}'. The sequence is reported as stale. Continue with new head sequence at '{}'",
+              sequence,
+              headSequence,
+              e);
+
+      sequence = headSequence;
+
+    } catch (IllegalArgumentException e) {
+      // if sequence is smaller than 0 or larger than tailSequence()+1
+      final var headSequence = ringbuffer.headSequence();
+      LOGGER.warn(
+              "Fail to read from ring-buffer at sequence '{}'. Continue with head sequence at '{}'",
+              sequence,
+              headSequence,
+              e);
+
+      sequence = headSequence;
+
     } catch (InterruptedException e) {
-      LOGGER.debug("Interrupted while reading from ringbuffer with sequence '{}'", sequence);
+      LOGGER.debug("Interrupted while reading from ring-buffer with sequence '{}'", sequence);
+      throw new RuntimeException("Interrupted while reading from ring-buffer", e);
+
+    } catch (Exception e) {
+      if (!isClosed) {
+        LOGGER.error(
+                "Fail to read from ring-buffer at sequence '{}'. Will try again.", sequence, e);
+      }
     }
   }
 
