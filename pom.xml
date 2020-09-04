@@ -4,7 +4,7 @@
     <name>Zeebe Hazelcast Root</name>
     <groupId>io.zeebe.hazelcast</groupId>
     <artifactId>root</artifactId>
-    <version>0.9.1</version>
+    <version>0.10.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <parent>
@@ -177,7 +177,7 @@
         <url>https://github.com/zeebe-io/zeebe-hazelcast-exporter</url>
         <connection>scm:git:git@github.com:zeebe-io/zeebe-hazelcast-exporter.git</connection>
         <developerConnection>scm:git:git@github.com:zeebe-io/zeebe-hazelcast-exporter.git</developerConnection>
-        <tag>0.9.1</tag>
+        <tag>HEAD</tag>
     </scm>
 
 </project>
