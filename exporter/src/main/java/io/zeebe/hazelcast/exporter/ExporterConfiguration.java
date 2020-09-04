@@ -13,7 +13,7 @@ public class ExporterConfiguration {
   private String name = "zeebe";
 
   private int capacity = -1;
-  private int timeToLiveInSeconds = -1;
+  private int timeToLiveInSeconds = 0;
 
   private String format = "protobuf";
 

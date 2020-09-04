@@ -142,8 +142,8 @@ zeebe:
           # Hazelcast ringbuffer's capacity
           capacity = 10000 
 
-          # Hazelcast ringbuffer's time-to-live in seconds
-          timeToLiveInSeconds = 3600
+          # Hazelcast ringbuffer's time-to-live in seconds. Don't remove the records until reaching the capacity by setting it to 0.  
+          timeToLiveInSeconds = 0
 
           # record serialization format: [protobuf|json]
           format = "protobuf"
