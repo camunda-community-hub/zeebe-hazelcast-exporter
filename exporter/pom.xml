@@ -10,7 +10,15 @@
         <artifactId>root</artifactId>
         <version>0.10.0-SNAPSHOT</version>
     </parent>
-
+    
+    <properties>
+    	<!-- Base Zeebe image (including tags) for the Docker image (Zeebe + exporter) -->
+    	<baseImage>docker.io/camunda/zeebe:${version.zeebe}</baseImage>
+    	
+    	<!-- Destination image (without tags) for the Docker image (Zeebe + exporter) -->
+    	<destinationImage>docker.io/camunda/zeebe-with-hazelcast-exporter</destinationImage>
+	</properties>
+	
     <dependencies>
 
         <dependency>
@@ -103,10 +111,10 @@
                 <version>2.6.0</version>
                 <configuration>
                     <from>
-                        <image>docker.io/camunda/zeebe:${version.zeebe}</image>
+                        <image>${baseImage}</image>
                     </from>
                     <to>
-                        <image>docker.io/camunda/zeebe-with-hazelcast-exporter</image>
+                        <image>${destinationImage}</image>
                         <tags>latest,${version.zeebe}-${env.RELEASE_VERSION}</tags>
                     </to>
                     <container>
