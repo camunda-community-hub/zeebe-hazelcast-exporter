@@ -111,6 +111,15 @@
                     </to>
                     <container>
                         <entrypoint>INHERIT</entrypoint>
+                        <ports>
+                        	<port>26500</port>
+                        	<port>9600</port>
+                        	<port>5701</port>
+                        </ports>
+                        <environment>
+                        	<ZEEBE_BROKER_EXPORTERS_HAZELCAST_CLASSNAME>io.zeebe.hazelcast.exporter.HazelcastExporter</ZEEBE_BROKER_EXPORTERS_HAZELCAST_CLASSNAME>
+                        	<ZEEBE_BROKER_EXPORTERS_HAZELCAST_JARPATH>exporters/zeebe-hazelcast-exporter-jar-with-dependencies.jar</ZEEBE_BROKER_EXPORTERS_HAZELCAST_JARPATH>	
+                        </environment>
                     </container>
                     <extraDirectories>
                         <paths>
@@ -122,7 +131,6 @@
                     </extraDirectories>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
 

@@ -64,23 +64,11 @@ Example usage:
 
 ### Docker
 
-A docker image is published to [DockerHub](https://hub.docker.com/r/camunda/zeebe-with-hazelcast-exporter) that is based on the Zeebe image and includes the Hazelcast exporter.
+A docker image is published to [DockerHub](https://hub.docker.com/r/camunda/zeebe-with-hazelcast-exporter) that is based on the Zeebe image and includes the Hazelcast exporter (the exporter is enabled by default).
 
 ```
 docker pull camunda/zeebe-with-hazelcast-exporter:latest
 ```
-
-* the exporter is stored under `exporters/zeebe-hazelcast-exporter-jar-with-dependencies.jar` in the Zeebe directory
-* the exporter is not enabled by default, use the following configuration to enable it:
-
-    ```
-    zeebe:
-      broker:
-        exporters:
-          hazelcast:
-            className: io.zeebe.hazelcast.exporter.HazelcastExporter
-            jarPath: exporters/zeebe-hazelcast-exporter-jar-with-dependencies.jar
-    ```	 
 
 For a local setup, the repository contains a [docker-compose file](docker/docker-compose.yml). It starts a Zeebe broker with the Hazelcast exporter. The version of the exporter is defined in the `.env` file. 
 
