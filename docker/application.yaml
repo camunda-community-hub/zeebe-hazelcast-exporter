@@ -3,4 +3,4 @@ zeebe:
     exporters:
       hazelcast:
         className: io.zeebe.hazelcast.exporter.HazelcastExporter
-        jarPath: exporters/zeebe-hazelcast-exporter.jar
+        jarPath: exporters/zeebe-hazelcast-exporter-jar-with-dependencies.jar
