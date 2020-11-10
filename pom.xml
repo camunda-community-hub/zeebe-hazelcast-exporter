@@ -19,7 +19,7 @@
         <version.zeebe>0.25.1</version.zeebe>
         <version.hazelcast>4.1</version.hazelcast>
         <version.exporter.protobuf>0.11.0</version.exporter.protobuf>
-        <version.log4j>2.13.3</version.log4j>
+        <version.log4j>2.14.0</version.log4j>
 
         <!-- release parent settings -->
         <version.java>11</version.java>
