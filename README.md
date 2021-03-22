@@ -1,6 +1,11 @@
-[![Build Status](https://travis-ci.org/zeebe-io/zeebe-hazelcast-exporter.svg?branch=master)](https://travis-ci.org/zeebe-io/zeebe-hazelcast-exporter)
 
 # zeebe-hazelcast-exporter
+
+[![](https://img.shields.io/badge/Community%20Extension-An%20open%20source%20community%20maintained%20project-FF4700)](https://github.com/camunda-community-hub/community)
+
+[![](https://img.shields.io/badge/Lifecycle-Stable-brightgreen)](https://github.com/Camunda-Community-Hub/community/blob/main/extension-lifecycle.md#stable-)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Build Status](https://travis-ci.org/zeebe-io/zeebe-hazelcast-exporter.svg?branch=master)](https://travis-ci.org/zeebe-io/zeebe-hazelcast-exporter)
 
 Export records from [Zeebe](https://github.com/zeebe-io/zeebe) to [Hazelcast](https://github.com/hazelcast/hazelcast/). Hazelcast is an in-memory data grid which is used as a transport layer.
 
