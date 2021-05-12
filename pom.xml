@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <name>Zeebe Hazelcast Root</name>
@@ -10,9 +11,9 @@
     <parent>
         <groupId>org.camunda</groupId>
         <artifactId>camunda-release-parent</artifactId>
-        <version>3.7</version>
+        <version>3.8.1</version>
         <!-- do not remove empty tag - http://jira.codehaus.org/browse/MNG-4687 -->
-        <relativePath />
+        <relativePath/>
     </parent>
 
     <properties>
@@ -118,31 +119,31 @@
 
     <profiles>
         <profile>
-            <id>release</id>
-            <properties>
-                <plugin.version.gpg>1.6</plugin.version.gpg>
-                <gpg.passphrase>${env.GPG_PASS}</gpg.passphrase>
-                <resume>false</resume>
-                <tag>${env.RELEASE_VERSION}</tag>
-                <releaseVersion>${env.RELEASE_VERSION}</releaseVersion>
-                <developmentVersion>${env.DEVELOPMENT_VERSION}</developmentVersion>
-                <arguments>-DskipTests</arguments>
-            </properties>
+            <id>community-action-maven-release</id>
             <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-gpg-plugin</artifactId>
-                            <configuration>
-                                <gpgArguments>
-                                    <arg>--pinentry-mode</arg>
-                                    <arg>loopback</arg>
-                                </gpgArguments>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <!-- Prevent gpg from using pinentry programs -->
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
+                    </plugin>
+                </plugins>
             </build>
         </profile>
     </profiles>
@@ -174,9 +175,10 @@
     </repositories>
 
     <scm>
-        <url>https://github.com/zeebe-io/zeebe-hazelcast-exporter</url>
-        <connection>scm:git:git@github.com:zeebe-io/zeebe-hazelcast-exporter.git</connection>
-        <developerConnection>scm:git:git@github.com:zeebe-io/zeebe-hazelcast-exporter.git</developerConnection>
+        <url>https://github.com/camunda-community-hub/zeebe-hazelcast-exporter</url>
+        <connection>scm:git:git@github.com:camunda-community-hub/zeebe-hazelcast-exporter.git</connection>
+        <developerConnection>scm:git:git@github.com:camunda-community-hub/zeebe-hazelcast-exporter.git
+        </developerConnection>
         <tag>HEAD</tag>
     </scm>
 
