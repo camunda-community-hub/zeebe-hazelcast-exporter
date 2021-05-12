@@ -115,6 +115,7 @@
                         <image>docker.io/camunda/zeebe:${version.zeebe}</image>
                     </from>
                     <to>
+                        <image>ghcr.io/camunda-community-hub/zeebe-with-hazelcast-exporter</image>
                         <tags>${dockerTags}</tags>
                     </to>
                     <container>
