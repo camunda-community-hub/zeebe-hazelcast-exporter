@@ -26,20 +26,22 @@ public class ZeebeHazelcast implements AutoCloseable {
   static {
     RECORD_MESSAGE_TYPES = new ArrayList<>();
     RECORD_MESSAGE_TYPES.add(Schema.DeploymentRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.DeploymentDistributionRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.ErrorRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.IncidentRecord.class);
     RECORD_MESSAGE_TYPES.add(Schema.JobRecord.class);
     RECORD_MESSAGE_TYPES.add(Schema.JobBatchRecord.class);
-    RECORD_MESSAGE_TYPES.add(Schema.ErrorRecord.class);
-    RECORD_MESSAGE_TYPES.add(Schema.VariableRecord.class);
-    RECORD_MESSAGE_TYPES.add(Schema.VariableDocumentRecord.class);
     RECORD_MESSAGE_TYPES.add(Schema.MessageStartEventSubscriptionRecord.class);
     RECORD_MESSAGE_TYPES.add(Schema.MessageSubscriptionRecord.class);
     RECORD_MESSAGE_TYPES.add(Schema.MessageRecord.class);
-    RECORD_MESSAGE_TYPES.add(Schema.WorkflowInstanceRecord.class);
-    RECORD_MESSAGE_TYPES.add(Schema.WorkflowInstanceCreationRecord.class);
-    RECORD_MESSAGE_TYPES.add(Schema.WorkflowInstanceResultRecord.class);
-    RECORD_MESSAGE_TYPES.add(Schema.WorkflowInstanceSubscriptionRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.ProcessRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.ProcessEventRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.ProcessInstanceRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.ProcessInstanceCreationRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.ProcessMessageSubscriptionRecord.class);
     RECORD_MESSAGE_TYPES.add(Schema.TimerRecord.class);
-    RECORD_MESSAGE_TYPES.add(Schema.IncidentRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.VariableRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.VariableDocumentRecord.class);
   }
 
   private final Ringbuffer<byte[]> ringbuffer;
@@ -54,19 +56,17 @@ public class ZeebeHazelcast implements AutoCloseable {
   private volatile boolean isClosed = false;
 
   private ZeebeHazelcast(
-          Ringbuffer<byte[]> ringbuffer,
-          long sequence,
-          Map<Class<?>, List<Consumer<?>>> listeners,
-          Consumer<Long> postProcessListener) {
+      Ringbuffer<byte[]> ringbuffer,
+      long sequence,
+      Map<Class<?>, List<Consumer<?>>> listeners,
+      Consumer<Long> postProcessListener) {
     this.ringbuffer = ringbuffer;
     this.sequence = sequence;
     this.listeners = listeners;
     this.postProcessListener = postProcessListener;
   }
 
-  /**
-   * Returns a new builder to read from the ringbuffer.
-   */
+  /** Returns a new builder to read from the ringbuffer. */
   public static Builder newBuilder(HazelcastInstance hazelcastInstance) {
     return new ZeebeHazelcast.Builder(hazelcastInstance);
   }
@@ -128,10 +128,10 @@ public class ZeebeHazelcast implements AutoCloseable {
       // StaleSequenceException contains the last known head.
       final var headSequence = e.getHeadSeq();
       LOGGER.warn(
-              "Fail to read from ring-buffer at sequence '{}'. The sequence is reported as stale. Continue with new head sequence at '{}'",
-              sequence,
-              headSequence,
-              e);
+          "Fail to read from ring-buffer at sequence '{}'. The sequence is reported as stale. Continue with new head sequence at '{}'",
+          sequence,
+          headSequence,
+          e);
 
       sequence = headSequence;
 
@@ -139,10 +139,10 @@ public class ZeebeHazelcast implements AutoCloseable {
       // if sequence is smaller than 0 or larger than tailSequence()+1
       final var headSequence = ringbuffer.headSequence();
       LOGGER.warn(
-              "Fail to read from ring-buffer at sequence '{}'. Continue with head sequence at '{}'",
-              sequence,
-              headSequence,
-              e);
+          "Fail to read from ring-buffer at sequence '{}'. Continue with head sequence at '{}'",
+          sequence,
+          headSequence,
+          e);
 
       sequence = headSequence;
 
@@ -153,7 +153,7 @@ public class ZeebeHazelcast implements AutoCloseable {
     } catch (Exception e) {
       if (!isClosed) {
         LOGGER.error(
-                "Fail to read from ring-buffer at sequence '{}'. Will try again.", sequence, e);
+            "Fail to read from ring-buffer at sequence '{}'. Will try again.", sequence, e);
       }
     }
   }
@@ -168,14 +168,14 @@ public class ZeebeHazelcast implements AutoCloseable {
   }
 
   private <T extends com.google.protobuf.Message> boolean handleRecord(
-          Schema.Record genericRecord, Class<T> t) throws InvalidProtocolBufferException {
+      Schema.Record genericRecord, Class<T> t) throws InvalidProtocolBufferException {
 
     if (genericRecord.getRecord().is(t)) {
       final var record = genericRecord.getRecord().unpack(t);
 
       listeners
-              .getOrDefault(t, List.of())
-              .forEach(listener -> ((Consumer<T>) listener).accept(record));
+          .getOrDefault(t, List.of())
+          .forEach(listener -> ((Consumer<T>) listener).accept(record));
 
       return true;
     } else {
@@ -238,7 +238,7 @@ public class ZeebeHazelcast implements AutoCloseable {
     }
 
     private <T extends com.google.protobuf.Message> void addListener(
-            Class<T> recordType, Consumer<T> listener) {
+        Class<T> recordType, Consumer<T> listener) {
       final var recordListeners = listeners.getOrDefault(recordType, new ArrayList<>());
       recordListeners.add(listener);
       listeners.put(recordType, recordListeners);
@@ -249,8 +249,24 @@ public class ZeebeHazelcast implements AutoCloseable {
       return this;
     }
 
-    public Builder addWorkflowInstanceListener(Consumer<Schema.WorkflowInstanceRecord> listener) {
-      addListener(Schema.WorkflowInstanceRecord.class, listener);
+    public Builder addDeploymentDistributionListener(
+        Consumer<Schema.DeploymentDistributionRecord> listener) {
+      addListener(Schema.DeploymentDistributionRecord.class, listener);
+      return this;
+    }
+
+    public Builder addProcessListener(Consumer<Schema.ProcessRecord> listener) {
+      addListener(Schema.ProcessRecord.class, listener);
+      return this;
+    }
+
+    public Builder addProcessInstanceListener(Consumer<Schema.ProcessInstanceRecord> listener) {
+      addListener(Schema.ProcessInstanceRecord.class, listener);
+      return this;
+    }
+
+    public Builder addProcessEventListener(Consumer<Schema.ProcessEventRecord> listener) {
+      addListener(Schema.ProcessEventRecord.class, listener);
       return this;
     }
 
@@ -290,32 +306,26 @@ public class ZeebeHazelcast implements AutoCloseable {
     }
 
     public Builder addMessageSubscriptionListener(
-            Consumer<Schema.MessageSubscriptionRecord> listener) {
+        Consumer<Schema.MessageSubscriptionRecord> listener) {
       addListener(Schema.MessageSubscriptionRecord.class, listener);
       return this;
     }
 
     public Builder addMessageStartEventSubscriptionListener(
-            Consumer<Schema.MessageStartEventSubscriptionRecord> listener) {
+        Consumer<Schema.MessageStartEventSubscriptionRecord> listener) {
       addListener(Schema.MessageStartEventSubscriptionRecord.class, listener);
       return this;
     }
 
-    public Builder addWorkflowInstanceSubscriptionListener(
-            Consumer<Schema.WorkflowInstanceSubscriptionRecord> listener) {
-      addListener(Schema.WorkflowInstanceSubscriptionRecord.class, listener);
+    public Builder addProcessMessageSubscriptionListener(
+        Consumer<Schema.ProcessMessageSubscriptionRecord> listener) {
+      addListener(Schema.ProcessMessageSubscriptionRecord.class, listener);
       return this;
     }
 
-    public Builder addWorkflowInstanceCreationListener(
-            Consumer<Schema.WorkflowInstanceCreationRecord> listener) {
-      addListener(Schema.WorkflowInstanceCreationRecord.class, listener);
-      return this;
-    }
-
-    public Builder addWorkflowInstanceResultListener(
-            Consumer<Schema.WorkflowInstanceResultRecord> listener) {
-      addListener(Schema.WorkflowInstanceResultRecord.class, listener);
+    public Builder addProcessInstanceCreationListener(
+        Consumer<Schema.ProcessInstanceCreationRecord> listener) {
+      addListener(Schema.ProcessInstanceCreationRecord.class, listener);
       return this;
     }
 
@@ -332,9 +342,9 @@ public class ZeebeHazelcast implements AutoCloseable {
       if (readFromSequence > 0) {
         if (readFromSequence > (tailSequence + 1)) {
           LOGGER.info(
-                  "The given sequence '{}' is greater than the current tail-sequence '{}' of the ringbuffer. Using the head-sequence instead.",
-                  readFromSequence,
-                  tailSequence);
+              "The given sequence '{}' is greater than the current tail-sequence '{}' of the ringbuffer. Using the head-sequence instead.",
+              readFromSequence,
+              tailSequence);
           return headSequence;
         } else {
           return readFromSequence;
@@ -362,21 +372,21 @@ public class ZeebeHazelcast implements AutoCloseable {
 
       if (ringbuffer == null) {
         throw new IllegalArgumentException(
-                String.format("No ring buffer found with name '%s'", name));
+            String.format("No ring buffer found with name '%s'", name));
       }
 
       LOGGER.debug(
-              "Ringbuffer status: [head: {}, tail: {}, size: {}, capacity: {}]",
-              ringbuffer.headSequence(),
-              ringbuffer.tailSequence(),
-              ringbuffer.size(),
-              ringbuffer.capacity());
+          "Ringbuffer status: [head: {}, tail: {}, size: {}, capacity: {}]",
+          ringbuffer.headSequence(),
+          ringbuffer.tailSequence(),
+          ringbuffer.size(),
+          ringbuffer.capacity());
 
       final long sequence = getSequence(ringbuffer);
       LOGGER.info("Read from ringbuffer '{}' starting from sequence '{}'", name, sequence);
 
       final var zeebeHazelcast =
-              new ZeebeHazelcast(ringbuffer, sequence, listeners, postProcessListener);
+          new ZeebeHazelcast(ringbuffer, sequence, listeners, postProcessListener);
       zeebeHazelcast.start();
 
       return zeebeHazelcast;
