@@ -3,21 +3,21 @@ package io.zeebe.hazelcast;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
-import io.zeebe.client.ZeebeClient;
+import io.camunda.zeebe.client.ZeebeClient;
+import io.camunda.zeebe.model.bpmn.Bpmn;
+import io.camunda.zeebe.model.bpmn.BpmnModelInstance;
+import io.camunda.zeebe.protocol.record.intent.DeploymentIntent;
+import io.camunda.zeebe.protocol.record.value.BpmnElementType;
+import io.camunda.zeebe.test.ZeebeTestRule;
 import io.zeebe.exporter.proto.Schema;
 import io.zeebe.hazelcast.connect.java.ZeebeHazelcast;
-import io.zeebe.hazelcast.exporter.ExporterConfiguration;
-import io.zeebe.model.bpmn.Bpmn;
-import io.zeebe.model.bpmn.BpmnModelInstance;
-import io.zeebe.test.ZeebeTestRule;
-import io.zeebe.test.util.TestUtil;
+import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -25,20 +25,17 @@ import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
 
 public class ExporterTest {
 
-  private static final BpmnModelInstance WORKFLOW =
+  private static final BpmnModelInstance PROCESS =
       Bpmn.createExecutableProcess("process")
-              .startEvent("start")
-              .sequenceFlowId("to-task")
-              .serviceTask("task", s -> s.zeebeJobType("test").zeebeInputExpression("foo", "bar"))
+          .startEvent("start")
+          .sequenceFlowId("to-task")
+          .serviceTask("task", s -> s.zeebeJobType("test").zeebeInputExpression("foo", "bar"))
           .sequenceFlowId("to-end")
           .endEvent("end")
           .done();
-
-  private static final ExporterConfiguration CONFIGURATION = new ExporterConfiguration();
 
   @Rule
   public final ZeebeTestRule testRule = new ZeebeTestRule("application.yaml", Properties::new);
@@ -63,107 +60,40 @@ public class ExporterTest {
   }
 
   @Test
-  public void shouldExportWorkflowInstanceEvents() {
-    final List<Schema.WorkflowInstanceRecord> events = new ArrayList<>();
-
-    zeebeHazelcast = ZeebeHazelcast.newBuilder(hz).addWorkflowInstanceListener(events::add).build();
-
-    client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
-
-    client.newCreateInstanceCommand().bpmnProcessId("process").latestVersion().send().join();
-
-    TestUtil.waitUntil(() -> events.size() >= 4);
-
-    assertThat(events)
-            .extracting(r -> tuple(r.getElementId(), r.getMetadata().getIntent()))
-            .containsSequence(
-                    tuple("process", "ELEMENT_ACTIVATING"),
-                    tuple("process", "ELEMENT_ACTIVATED"),
-                    tuple("start", "ELEMENT_ACTIVATING"),
-                    tuple("start", "ELEMENT_ACTIVATED"));
-  }
-
-  @Test
-  public void shouldExportDeploymentEvents() {
-    final List<Schema.DeploymentRecord> events = new ArrayList<>();
-
-    zeebeHazelcast = ZeebeHazelcast.newBuilder(hz).addDeploymentListener(events::add).build();
-
-    client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
-
-    TestUtil.waitUntil(() -> events.size() >= 4);
-
-    assertThat(events)
-            .hasSize(4)
-            .extracting(r -> r.getMetadata().getIntent())
-            .containsExactly("CREATE", "CREATED", "DISTRIBUTE", "DISTRIBUTED");
-  }
-
-  @Test
-  public void shouldExportJobEvents() {
-    final List<Schema.JobRecord> events = new ArrayList<>();
-
-    zeebeHazelcast = ZeebeHazelcast.newBuilder(hz).addJobListener(events::add).build();
-
-    client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
-
-    client
-            .newCreateInstanceCommand()
-            .bpmnProcessId("process")
-            .latestVersion()
-            .variables(Collections.singletonMap("foo", 123))
-            .send()
-            .join();
-
-    TestUtil.waitUntil(() -> events.size() >= 2);
-
-    assertThat(events)
-            .hasSize(2)
-            .extracting(r -> r.getMetadata().getIntent())
-            .containsExactly("CREATE", "CREATED");
-  }
-
-  @Test
-  public void shouldExportIncidentEvents() {
-    final List<Schema.IncidentRecord> events = new ArrayList<>();
-
-    zeebeHazelcast = ZeebeHazelcast.newBuilder(hz).addIncidentListener(events::add).build();
-
-    client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
-
-    client.newCreateInstanceCommand().bpmnProcessId("process").latestVersion().send().join();
-
-    TestUtil.waitUntil(() -> events.size() >= 2);
-
-    assertThat(events)
-            .hasSize(2)
-            .extracting(r -> r.getMetadata().getIntent())
-            .containsExactly("CREATE", "CREATED");
-  }
-
-  @Test
   public void shouldIncrementSequence() {
     // given
     final List<Schema.DeploymentRecord> deploymentRecords = new ArrayList<>();
-    final List<Schema.WorkflowInstanceRecord> wfRecords = new ArrayList<>();
+    final List<Schema.ProcessInstanceRecord> processInstanceRecords = new ArrayList<>();
 
     zeebeHazelcast =
-            ZeebeHazelcast.newBuilder(hz)
-                    .addDeploymentListener(deploymentRecords::add)
-                    .addWorkflowInstanceListener(wfRecords::add)
-                    .build();
+        ZeebeHazelcast.newBuilder(hz)
+            .addDeploymentListener(deploymentRecords::add)
+            .addProcessInstanceListener(processInstanceRecords::add)
+            .build();
 
     final var sequence1 = zeebeHazelcast.getSequence();
 
     // when
-    client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
+    client.newDeployCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
 
-    TestUtil.waitUntil(() -> deploymentRecords.size() >= 2);
+    Awaitility.await("await until the deployment is fully distributed")
+        .untilAsserted(
+            () ->
+                assertThat(deploymentRecords)
+                    .extracting(r -> r.getMetadata().getIntent())
+                    .contains(DeploymentIntent.FULLY_DISTRIBUTED.name()));
+
     final var sequence2 = zeebeHazelcast.getSequence();
 
     client.newCreateInstanceCommand().bpmnProcessId("process").latestVersion().send().join();
 
-    TestUtil.waitUntil(() -> wfRecords.size() >= 4);
+    Awaitility.await("await until the service task is activated")
+        .untilAsserted(
+            () ->
+                assertThat(processInstanceRecords)
+                    .extracting(Schema.ProcessInstanceRecord::getBpmnElementType)
+                    .contains(BpmnElementType.SERVICE_TASK.name()));
+
     final var sequence3 = zeebeHazelcast.getSequence();
 
     // then
@@ -177,41 +107,45 @@ public class ExporterTest {
     final List<Long> invocations = new ArrayList<>();
 
     final List<Schema.DeploymentRecord> deploymentRecords = new ArrayList<>();
-    final List<Schema.WorkflowInstanceRecord> wfRecords = new ArrayList<>();
+    final List<Schema.ProcessInstanceRecord> processInstanceRecords = new ArrayList<>();
     final List<Schema.JobRecord> jobRecords = new ArrayList<>();
 
     zeebeHazelcast =
-            ZeebeHazelcast.newBuilder(hz)
-                    .addDeploymentListener(deploymentRecords::add)
-                    .addWorkflowInstanceListener(wfRecords::add)
-                    .addJobListener(jobRecords::add)
-                    .postProcessListener(invocations::add)
-                    .build();
+        ZeebeHazelcast.newBuilder(hz)
+            .addDeploymentListener(deploymentRecords::add)
+            .addProcessInstanceListener(processInstanceRecords::add)
+            .addJobListener(jobRecords::add)
+            .postProcessListener(invocations::add)
+            .build();
 
     final var initialSequence = zeebeHazelcast.getSequence();
 
     // when
-    client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
+    client.newDeployCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
     client
-            .newCreateInstanceCommand()
-            .bpmnProcessId("process")
-            .latestVersion()
-            .variables(Map.of("foo", "bar"))
-            .send()
-            .join();
+        .newCreateInstanceCommand()
+        .bpmnProcessId("process")
+        .latestVersion()
+        .variables(Map.of("foo", "bar"))
+        .send()
+        .join();
 
-    TestUtil.waitUntil(() -> jobRecords.size() >= 1);
-    TestUtil.waitUntil(
-            () ->
-                    invocations.size() >= deploymentRecords.size() + wfRecords.size() + jobRecords.size());
+    Awaitility.await()
+        .untilAsserted(
+            () -> {
+              assertThat(jobRecords).hasSizeGreaterThanOrEqualTo(1);
+              assertThat(invocations)
+                  .hasSizeGreaterThanOrEqualTo(
+                      deploymentRecords.size() + processInstanceRecords.size() + jobRecords.size());
+            });
 
     final var lastSequence = zeebeHazelcast.getSequence();
 
     // then
     final var expectedSequence =
-            LongStream.rangeClosed(initialSequence + 1, lastSequence)
-                    .boxed()
-                    .collect(Collectors.toList());
+        LongStream.rangeClosed(initialSequence + 1, lastSequence)
+            .boxed()
+            .collect(Collectors.toList());
 
     assertThat(invocations).isEqualTo(expectedSequence);
   }
@@ -220,60 +154,87 @@ public class ExporterTest {
   public void shouldReadFromHead() throws Exception {
     // given
     final List<Schema.DeploymentRecord> deploymentRecords = new ArrayList<>();
-    final List<Schema.WorkflowInstanceRecord> wfRecords = new ArrayList<>();
+    final List<Schema.ProcessInstanceRecord> processInstanceRecords = new ArrayList<>();
 
     zeebeHazelcast =
-            ZeebeHazelcast.newBuilder(hz)
-                    .addDeploymentListener(deploymentRecords::add)
-                    .readFromHead()
-                    .build();
+        ZeebeHazelcast.newBuilder(hz)
+            .addDeploymentListener(deploymentRecords::add)
+            .readFromHead()
+            .build();
 
-    client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
-    TestUtil.waitUntil(() -> deploymentRecords.size() >= 4);
+    client.newDeployCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
+
+    Awaitility.await("await until the deployment is fully distributed")
+        .untilAsserted(
+            () ->
+                assertThat(deploymentRecords)
+                    .hasSize(3)
+                    .extracting(r -> r.getMetadata().getIntent())
+                    .contains("CREATE", "CREATED", "FULLY_DISTRIBUTED"));
 
     zeebeHazelcast.close();
     deploymentRecords.clear();
 
     // when
     zeebeHazelcast =
-            ZeebeHazelcast.newBuilder(hz)
-                    .addDeploymentListener(deploymentRecords::add)
-                    .addWorkflowInstanceListener(wfRecords::add)
-                    .readFromHead()
-                    .build();
+        ZeebeHazelcast.newBuilder(hz)
+            .addDeploymentListener(deploymentRecords::add)
+            .addProcessInstanceListener(processInstanceRecords::add)
+            .readFromHead()
+            .build();
 
     client.newCreateInstanceCommand().bpmnProcessId("process").latestVersion().send().join();
-    TestUtil.waitUntil(() -> wfRecords.size() >= 4);
+
+    Awaitility.await("await until the service task is activated")
+        .untilAsserted(
+            () ->
+                assertThat(processInstanceRecords)
+                    .extracting(Schema.ProcessInstanceRecord::getBpmnElementType)
+                    .contains(BpmnElementType.SERVICE_TASK.name()));
 
     // then
-    assertThat(deploymentRecords).hasSize(4);
+    assertThat(deploymentRecords)
+        .hasSize(3)
+        .extracting(r -> r.getMetadata().getIntent())
+        .contains("CREATE", "CREATED", "FULLY_DISTRIBUTED");
   }
 
   @Test
   public void shouldReadFromTail() throws Exception {
     // given
     final List<Schema.DeploymentRecord> deploymentRecords = new ArrayList<>();
-    final List<Schema.WorkflowInstanceRecord> wfRecords = new ArrayList<>();
+    final List<Schema.ProcessInstanceRecord> processInstanceRecords = new ArrayList<>();
 
     zeebeHazelcast =
-            ZeebeHazelcast.newBuilder(hz).addDeploymentListener(deploymentRecords::add).build();
+        ZeebeHazelcast.newBuilder(hz).addDeploymentListener(deploymentRecords::add).build();
 
-    client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
-    TestUtil.waitUntil(() -> deploymentRecords.size() >= 4);
+    client.newDeployCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
+    Awaitility.await("await until the deployment is fully distributed")
+        .untilAsserted(
+            () ->
+                assertThat(deploymentRecords)
+                    .extracting(r -> r.getMetadata().getIntent())
+                    .contains(DeploymentIntent.FULLY_DISTRIBUTED.name()));
 
     zeebeHazelcast.close();
     deploymentRecords.clear();
 
     // when
     zeebeHazelcast =
-            ZeebeHazelcast.newBuilder(hz)
-                    .addDeploymentListener(deploymentRecords::add)
-                    .addWorkflowInstanceListener(wfRecords::add)
-                    .readFromTail()
-                    .build();
+        ZeebeHazelcast.newBuilder(hz)
+            .addDeploymentListener(deploymentRecords::add)
+            .addProcessInstanceListener(processInstanceRecords::add)
+            .readFromTail()
+            .build();
 
     client.newCreateInstanceCommand().bpmnProcessId("process").latestVersion().send().join();
-    TestUtil.waitUntil(() -> wfRecords.size() >= 4);
+
+    Awaitility.await("await until the service task is activated")
+        .untilAsserted(
+            () ->
+                assertThat(processInstanceRecords)
+                    .extracting(Schema.ProcessInstanceRecord::getBpmnElementType)
+                    .contains(BpmnElementType.SERVICE_TASK.name()));
 
     // then
     assertThat(deploymentRecords).hasSize(1);
@@ -283,13 +244,19 @@ public class ExporterTest {
   public void shouldReadFromSequence() throws Exception {
     // given
     final List<Schema.DeploymentRecord> deploymentRecords = new ArrayList<>();
-    final List<Schema.WorkflowInstanceRecord> wfRecords = new ArrayList<>();
+    final List<Schema.ProcessInstanceRecord> processInstanceRecords = new ArrayList<>();
 
     zeebeHazelcast =
-            ZeebeHazelcast.newBuilder(hz).addDeploymentListener(deploymentRecords::add).build();
+        ZeebeHazelcast.newBuilder(hz).addDeploymentListener(deploymentRecords::add).build();
 
-    client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
-    TestUtil.waitUntil(() -> deploymentRecords.size() >= 4);
+    client.newDeployCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
+
+    Awaitility.await("await until the deployment is fully distributed")
+        .untilAsserted(
+            () ->
+                assertThat(deploymentRecords)
+                    .extracting(r -> r.getMetadata().getIntent())
+                    .contains(DeploymentIntent.FULLY_DISTRIBUTED.name()));
 
     final var sequence = zeebeHazelcast.getSequence();
 
@@ -298,14 +265,20 @@ public class ExporterTest {
 
     // when
     zeebeHazelcast =
-            ZeebeHazelcast.newBuilder(hz)
-                    .addDeploymentListener(deploymentRecords::add)
-                    .addWorkflowInstanceListener(wfRecords::add)
-                    .readFrom(sequence)
-                    .build();
+        ZeebeHazelcast.newBuilder(hz)
+            .addDeploymentListener(deploymentRecords::add)
+            .addProcessInstanceListener(processInstanceRecords::add)
+            .readFrom(sequence)
+            .build();
 
     client.newCreateInstanceCommand().bpmnProcessId("process").latestVersion().send().join();
-    TestUtil.waitUntil(() -> wfRecords.size() >= 4);
+
+    Awaitility.await("await until the service task is activated")
+        .untilAsserted(
+            () ->
+                assertThat(processInstanceRecords)
+                    .extracting(Schema.ProcessInstanceRecord::getBpmnElementType)
+                    .contains(BpmnElementType.SERVICE_TASK.name()));
 
     // then
     assertThat(deploymentRecords).isEmpty();

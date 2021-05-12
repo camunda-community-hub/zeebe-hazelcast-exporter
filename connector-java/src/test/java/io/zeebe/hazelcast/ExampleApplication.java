@@ -16,14 +16,14 @@ public class ExampleApplication {
     HazelcastInstance hz = HazelcastClient.newHazelcastClient(clientConfig);
 
     ZeebeHazelcast zeebeHazelcast =
-            ZeebeHazelcast.newBuilder(hz)
-                    .readFromTail()
-                    .addDeploymentListener(deployment -> System.out.println("> deployment: " + deployment))
-                    .addWorkflowInstanceListener(
-                            workflowInstance -> System.out.println("> workflow instance: " + workflowInstance))
-                    .addJobListener(job -> System.out.println("> job: " + job))
-                    .addIncidentListener(incident -> System.out.println("> incident: " + incident))
-                    .build();
+        ZeebeHazelcast.newBuilder(hz)
+            .readFromTail()
+            .addDeploymentListener(deployment -> System.out.println("> deployment: " + deployment))
+            .addProcessInstanceListener(
+                workflowInstance -> System.out.println("> workflow instance: " + workflowInstance))
+            .addJobListener(job -> System.out.println("> job: " + job))
+            .addIncidentListener(incident -> System.out.println("> incident: " + incident))
+            .build();
 
     try {
       new CountDownLatch(1).await();
