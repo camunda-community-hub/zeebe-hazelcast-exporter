@@ -6,12 +6,12 @@ import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.ringbuffer.Ringbuffer;
-import io.zeebe.client.ZeebeClient;
+import io.camunda.zeebe.client.ZeebeClient;
+import io.camunda.zeebe.model.bpmn.Bpmn;
+import io.camunda.zeebe.model.bpmn.BpmnModelInstance;
+import io.camunda.zeebe.test.ZeebeTestRule;
 import io.zeebe.exporter.proto.Schema;
 import io.zeebe.hazelcast.exporter.ExporterConfiguration;
-import io.zeebe.model.bpmn.Bpmn;
-import io.zeebe.model.bpmn.BpmnModelInstance;
-import io.zeebe.test.ZeebeTestRule;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -24,18 +24,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class RemoteExporterTest {
 
   private static final BpmnModelInstance WORKFLOW =
-          Bpmn.createExecutableProcess("process")
-                  .startEvent("start")
-                  .sequenceFlowId("to-task")
-                  .serviceTask("task", s -> s.zeebeJobType("test"))
-                  .sequenceFlowId("to-end")
-                  .endEvent("end")
-                  .done();
+      Bpmn.createExecutableProcess("process")
+          .startEvent("start")
+          .sequenceFlowId("to-task")
+          .serviceTask("task", s -> s.zeebeJobType("test"))
+          .sequenceFlowId("to-end")
+          .endEvent("end")
+          .done();
 
   private static final ExporterConfiguration CONFIGURATION = new ExporterConfiguration();
 
   @Rule
-  public final ZeebeTestRule testRule = new ZeebeTestRule("application-remote.yaml", Properties::new);
+  public final ZeebeTestRule testRule =
+      new ZeebeTestRule("application-remote.yaml", Properties::new);
 
   private ZeebeClient client;
   private HazelcastInstance hzInstance;
@@ -68,7 +69,7 @@ public class RemoteExporterTest {
     var sequence = buffer.headSequence();
 
     // when
-    client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
+    client.newDeployCommand().addProcessModel(WORKFLOW, "process.bpmn").send().join();
 
     // then
     final var message = buffer.readOne(sequence);

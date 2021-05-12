@@ -7,12 +7,12 @@ import com.hazelcast.config.RingbufferConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.ringbuffer.Ringbuffer;
-import io.zeebe.exporter.api.Exporter;
-import io.zeebe.exporter.api.context.Context;
-import io.zeebe.exporter.api.context.Controller;
+import io.camunda.zeebe.exporter.api.Exporter;
+import io.camunda.zeebe.exporter.api.context.Context;
+import io.camunda.zeebe.exporter.api.context.Controller;
+import io.camunda.zeebe.protocol.record.Record;
 import io.zeebe.exporter.proto.RecordTransformer;
 import io.zeebe.exporter.proto.Schema;
-import io.zeebe.protocol.record.Record;
 import org.slf4j.Logger;
 
 import java.util.function.Function;
@@ -51,9 +51,9 @@ public class HazelcastExporter implements Exporter {
 
     } else {
       throw new IllegalArgumentException(
-              String.format(
-                      "Expected the parameter 'format' to be one fo 'protobuf' or 'json' but was '%s'",
-                      format));
+          String.format(
+              "Expected the parameter 'format' to be one fo 'protobuf' or 'json' but was '%s'",
+              format));
     }
   }
 
@@ -62,24 +62,24 @@ public class HazelcastExporter implements Exporter {
     this.controller = controller;
 
     hazelcast =
-            config
-                    .getRemoteAddress()
-                    .map(this::connectToHazelcast)
-                    .orElseGet(this::createHazelcastInstance);
+        config
+            .getRemoteAddress()
+            .map(this::connectToHazelcast)
+            .orElseGet(this::createHazelcastInstance);
 
     ringbuffer = hazelcast.getRingbuffer(config.getName());
     if (ringbuffer == null) {
       throw new IllegalStateException(
-              String.format("Failed to open ring-buffer with name '%s'", config.getName()));
+          String.format("Failed to open ring-buffer with name '%s'", config.getName()));
     }
 
     logger.info(
-            "Export records to ring-buffer with name '{}' [head: {}, tail: {}, size: {}, capacity: {}]",
-            ringbuffer.getName(),
-            ringbuffer.headSequence(),
-            ringbuffer.tailSequence(),
-            ringbuffer.size(),
-            ringbuffer.capacity());
+        "Export records to ring-buffer with name '{}' [head: {}, tail: {}, size: {}, capacity: {}]",
+        ringbuffer.getName(),
+        ringbuffer.headSequence(),
+        ringbuffer.tailSequence(),
+        ringbuffer.size(),
+        ringbuffer.capacity());
   }
 
   private HazelcastInstance createHazelcastInstance() {
@@ -131,9 +131,9 @@ public class HazelcastExporter implements Exporter {
 
       final var sequenceNumber = ringbuffer.add(transformedRecord);
       logger.trace(
-              "Added a record to the ring-buffer [record-position: {}, ring-buffer sequence-number: {}]",
-              record.getPosition(),
-              sequenceNumber);
+          "Added a record to the ring-buffer [record-position: {}, ring-buffer sequence-number: {}]",
+          record.getPosition(),
+          sequenceNumber);
     }
 
     controller.updateLastExportedRecordPosition(record.getPosition());

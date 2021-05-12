@@ -4,12 +4,12 @@ import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.ringbuffer.Ringbuffer;
-import io.zeebe.client.ZeebeClient;
+import io.camunda.zeebe.client.ZeebeClient;
+import io.camunda.zeebe.model.bpmn.Bpmn;
+import io.camunda.zeebe.model.bpmn.BpmnModelInstance;
+import io.camunda.zeebe.test.ZeebeTestRule;
 import io.zeebe.exporter.proto.Schema;
 import io.zeebe.hazelcast.exporter.ExporterConfiguration;
-import io.zeebe.model.bpmn.Bpmn;
-import io.zeebe.model.bpmn.BpmnModelInstance;
-import io.zeebe.test.ZeebeTestRule;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -23,9 +23,9 @@ public class ExporterTest {
 
   private static final BpmnModelInstance WORKFLOW =
       Bpmn.createExecutableProcess("process")
-              .startEvent("start")
-              .sequenceFlowId("to-task")
-              .serviceTask("task", s -> s.zeebeJobType("test"))
+          .startEvent("start")
+          .sequenceFlowId("to-task")
+          .serviceTask("task", s -> s.zeebeJobType("test"))
           .sequenceFlowId("to-end")
           .endEvent("end")
           .done();
@@ -60,7 +60,7 @@ public class ExporterTest {
     var sequence = buffer.headSequence();
 
     // when
-    client.newDeployCommand().addWorkflowModel(WORKFLOW, "process.bpmn").send().join();
+    client.newDeployCommand().addProcessModel(WORKFLOW, "process.bpmn").send().join();
 
     // then
     final var message = buffer.readOne(sequence);
