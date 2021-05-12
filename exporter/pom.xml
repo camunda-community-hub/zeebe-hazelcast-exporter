@@ -15,7 +15,7 @@
     <dependencies>
 
         <dependency>
-            <groupId>io.zeebe</groupId>
+            <groupId>io.camunda</groupId>
             <artifactId>zeebe-exporter-api</artifactId>
             <scope>provided</scope>
         </dependency>
@@ -56,7 +56,7 @@
         </dependency>
 
         <dependency>
-            <groupId>io.zeebe</groupId>
+            <groupId>io.camunda</groupId>
             <artifactId>zeebe-test</artifactId>
             <scope>test</scope>
         </dependency>
