@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <name>Zeebe Hazelcast Exporter</name>
@@ -91,7 +92,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/jib</outputDirectory>
-                            <finalName>${artifactId}</finalName>
+                            <finalName>${project.artifactId}</finalName>
                         </configuration>
                     </execution>
                 </executions>
@@ -100,25 +101,35 @@
             <plugin>
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
-                <version>2.8.0</version>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
                     <from>
                         <image>docker.io/camunda/zeebe:${version.zeebe}</image>
                     </from>
                     <to>
-                        <image>docker.io/camunda/zeebe-with-hazelcast-exporter</image>
-                        <tags>latest,${version.zeebe}-${env.RELEASE_VERSION}</tags>
+                        <tags>${dockerTags}</tags>
                     </to>
                     <container>
                         <entrypoint>INHERIT</entrypoint>
                         <ports>
-                        	<port>26500</port>
-                        	<port>9600</port>
-                        	<port>5701</port>
+                            <port>26500</port>
+                            <port>9600</port>
+                            <port>5701</port>
                         </ports>
                         <environment>
-                        	<ZEEBE_BROKER_EXPORTERS_HAZELCAST_CLASSNAME>io.zeebe.hazelcast.exporter.HazelcastExporter</ZEEBE_BROKER_EXPORTERS_HAZELCAST_CLASSNAME>
-                        	<ZEEBE_BROKER_EXPORTERS_HAZELCAST_JARPATH>exporters/zeebe-hazelcast-exporter-jar-with-dependencies.jar</ZEEBE_BROKER_EXPORTERS_HAZELCAST_JARPATH>	
+                            <ZEEBE_BROKER_EXPORTERS_HAZELCAST_CLASSNAME>io.zeebe.hazelcast.exporter.HazelcastExporter
+                            </ZEEBE_BROKER_EXPORTERS_HAZELCAST_CLASSNAME>
+                            <ZEEBE_BROKER_EXPORTERS_HAZELCAST_JARPATH>
+                                exporters/zeebe-hazelcast-exporter-jar-with-dependencies.jar
+                            </ZEEBE_BROKER_EXPORTERS_HAZELCAST_JARPATH>
                         </environment>
                     </container>
                     <extraDirectories>
@@ -133,5 +144,32 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>snapshot</id>
+            <activation>
+                <property>
+                    <name>RELEASE_VERSION</name>
+                    <value>snapshot</value>
+                </property>
+            </activation>
+            <properties>
+                <dockerTags>${version.zeebe}-${project.version}</dockerTags>
+            </properties>
+        </profile>
+        <profile>
+            <id>release</id>
+            <activation>
+                <property>
+                    <name>RELEASE_VERSION</name>
+                    <value>!snapshot</value>
+                </property>
+            </activation>
+            <properties>
+                <dockerTags>latest,${version.zeebe}-${project.version}</dockerTags>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>
