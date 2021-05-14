@@ -7,15 +7,15 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Build Status](https://travis-ci.org/zeebe-io/zeebe-hazelcast-exporter.svg?branch=master)](https://travis-ci.org/zeebe-io/zeebe-hazelcast-exporter)
 
-Export records from [Zeebe](https://github.com/zeebe-io/zeebe) to [Hazelcast](https://github.com/hazelcast/hazelcast/). Hazelcast is an in-memory data grid which is used as a transport layer.
+Export records from [Zeebe](https://github.com/camunda-cloud/zeebe) to [Hazelcast](https://github.com/hazelcast/hazelcast/). Hazelcast is an in-memory data grid which is used as a transport layer.
 
 ![How it works](how-it-works.png)
 
-The records are transformed into [Protobuf](https://github.com/zeebe-io/zeebe-exporter-protobuf) and added to one [ringbuffer](https://hazelcast.com/blog/ringbuffer-data-structure/). The ringbuffer has a fixed capacity and will override the oldest entries when the capacity is reached.
+The records are transformed into [Protobuf](https://github.com/camunda-community-hub/zeebe-exporter-protobuf) and added to one [ringbuffer](https://hazelcast.com/blog/ringbuffer-data-structure/). The ringbuffer has a fixed capacity and will override the oldest entries when the capacity is reached.
 
 Multiple applications can read from the ringbuffer. The application itself controls where to read from by proving a sequence number. Every application can read from a different sequence. 
 
-The Java and C# connector modules provide a convenient way to read the records from the ringbuffer.
+The Java module provide a convenient way to read the records from the ringbuffer.
 
 ## Usage
 
@@ -39,7 +39,7 @@ clientConfig.getNetworkConfig().addAddress("127.0.0.1:5701");
 HazelcastInstance hz = HazelcastClient.newHazelcastClient(clientConfig);
 
 final ZeebeHazelcast zeebeHazelcast = ZeebeHazelcast.newBuilder(hz)
-    .addWorkflowInstanceListener(workflowInstance -> { ... })
+    .addProcessInstanceListener(processInstance -> { ... })
     .readFrom(sequence) / .readFromHead() / .readFromTail()
     .build();
 
@@ -51,10 +51,10 @@ zeebeHazelcast.close();
 
 ### Docker
 
-A docker image is published to [DockerHub](https://hub.docker.com/r/camunda/zeebe-with-hazelcast-exporter) that is based on the Zeebe image and includes the Hazelcast exporter (the exporter is enabled by default).
+A docker image is published to [GitHub Packages](https://github.com/orgs/camunda-community-hub/packages/container/package/zeebe-with-hazelcast-exporter) that is based on the Zeebe image and includes the Hazelcast exporter (the exporter is enabled by default).
 
 ```
-docker pull camunda/zeebe-with-hazelcast-exporter:latest
+docker pull ghcr.io/camunda-community-hub/zeebe-with-hazelcast-exporter:latest
 ```
 
 For a local setup, the repository contains a [docker-compose file](docker/docker-compose.yml). It starts a Zeebe broker with the Hazelcast exporter. The version of the exporter is defined in the `.env` file. 
@@ -67,7 +67,7 @@ docker-compose up
 
 ### Manual
 
-1. Download the latest [Zeebe distribution](https://github.com/zeebe-io/zeebe/releases) _(zeebe-distribution-%{VERSION}.tar.gz
+1. Download the latest [Zeebe distribution](https://github.com/camunda-cloud/zeebe/releases) _(zeebe-distribution-%{VERSION}.tar.gz
 )_
 
 1. Copy the exporter JAR  into the broker folder `~/zeebe-broker-%{VERSION}/exporters`.
@@ -85,15 +85,6 @@ docker-compose up
           hazelcast:
             className: io.zeebe.hazelcast.exporter.HazelcastExporter
             jarPath: exporters/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar
-    ```
-
-    For broker version < 0.23.0-alpha2 `~/zeebe-broker-%{VERSION}/conf/zeebe.cfg.toml`:
-    
-    ```
-    [[exporters]]
-    id = "hazelcast"
-    className = "io.zeebe.hazelcast.exporter.HazelcastExporter"
-    jarPath = "exporters/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar"
     ```
 
 1. Start the broker
@@ -162,7 +153,7 @@ networks:
 services:
   zeebe:
     container_name: zeebe_broker
-    image: camunda/zeebe:0.23.1
+    image: camunda/zeebe:1.0.0
     environment:
       - ZEEBE_LOG_LEVEL=debug
       - ZEEBE_HAZELCAST_REMOTE_ADDRESS=hazelcast:5701
@@ -179,7 +170,7 @@ services:
 
   hazelcast:
     container_name: hazelcast
-    image: hazelcast/hazelcast:4.0.1
+    image: hazelcast/hazelcast:4.2
     ports:
       - "5701:5701"
     environment:
@@ -189,7 +180,7 @@ services:
       
   hazelcast-management:
     container_name: hazelcast-management
-    image: hazelcast/management-center:4.0.1
+    image: hazelcast/management-center:4.2
     ports:
       - "8083:8080"
     networks:
