@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <name>Zeebe Hazelcast Exporter</name>
@@ -115,7 +116,7 @@
                     </from>
                     <to>
                         <image>ghcr.io/camunda-community-hub/zeebe-with-hazelcast-exporter</image>
-                        <tags>${dockerTags}</tags>
+                        <tags>${version.zeebe}-${project.version}</tags>
                     </to>
                     <container>
                         <entrypoint>INHERIT</entrypoint>
@@ -144,32 +145,5 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>snapshot</id>
-            <activation>
-                <property>
-                    <name>RELEASE_VERSION</name>
-                    <value>snapshot</value>
-                </property>
-            </activation>
-            <properties>
-                <dockerTags>${version.zeebe}-${project.version}</dockerTags>
-            </properties>
-        </profile>
-        <profile>
-            <id>release</id>
-            <activation>
-                <property>
-                    <name>RELEASE_VERSION</name>
-                    <value>!snapshot</value>
-                </property>
-            </activation>
-            <properties>
-                <dockerTags>latest,${version.zeebe}-${project.version}</dockerTags>
-            </properties>
-        </profile>
-    </profiles>
 
 </project>
