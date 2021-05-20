@@ -54,7 +54,7 @@ zeebeHazelcast.close();
 A docker image is published to [GitHub Packages](https://github.com/orgs/camunda-community-hub/packages/container/package/zeebe-with-hazelcast-exporter) that is based on the Zeebe image and includes the Hazelcast exporter (the exporter is enabled by default).
 
 ```
-docker pull ghcr.io/camunda-community-hub/zeebe-with-hazelcast-exporter:latest
+docker pull ghcr.io/camunda-community-hub/zeebe-with-hazelcast-exporter:1.0.0-1.0.0
 ```
 
 For a local setup, the repository contains a [docker-compose file](docker/docker-compose.yml). It starts a Zeebe broker with the Hazelcast exporter. The version of the exporter is defined in the `.env` file. 
