@@ -1,6 +1,7 @@
 package io.zeebe.hazelcast.connect.java;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.hazelcast.client.HazelcastClientNotActiveException;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.ringbuffer.Ringbuffer;
 import com.hazelcast.ringbuffer.StaleSequenceException;
@@ -76,6 +77,10 @@ public class ZeebeHazelcast implements AutoCloseable {
     future = executorService.submit(this::readFromBuffer);
   }
 
+  public boolean isClosed() {
+    return isClosed;
+  }
+
   /** Stop reading from the ringbuffer. */
   @Override
   public void close() throws Exception {
@@ -145,6 +150,15 @@ public class ZeebeHazelcast implements AutoCloseable {
           e);
 
       sequence = headSequence;
+
+    } catch (HazelcastClientNotActiveException e) {
+      LOGGER.warn("Lost connection to the Hazelcast server", e);
+
+      try {
+        close();
+      } catch (Exception closingFailure) {
+        LOGGER.debug("Failure while closing the client", closingFailure);
+      }
 
     } catch (InterruptedException e) {
       LOGGER.debug("Interrupted while reading from ring-buffer with sequence '{}'", sequence);
