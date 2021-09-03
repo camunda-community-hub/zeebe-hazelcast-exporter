@@ -27,7 +27,7 @@ Add the Maven dependency to your `pom.xml`
 <dependency>
 	<groupId>io.zeebe.hazelcast</groupId>
 	<artifactId>zeebe-hazelcast-connector</artifactId>
-	<version>%{VERSION}</version>
+	<version>1.0.1</version>
 </dependency>
 ```
 
@@ -54,7 +54,7 @@ zeebeHazelcast.close();
 A docker image is published to [GitHub Packages](https://github.com/orgs/camunda-community-hub/packages/container/package/zeebe-with-hazelcast-exporter) that is based on the Zeebe image and includes the Hazelcast exporter (the exporter is enabled by default).
 
 ```
-docker pull ghcr.io/camunda-community-hub/zeebe-with-hazelcast-exporter:1.0.0-1.0.0
+docker pull ghcr.io/camunda-community-hub/zeebe-with-hazelcast-exporter:1.1.2-1.0.1
 ```
 
 For a local setup, the repository contains a [docker-compose file](docker/docker-compose.yml). It starts a Zeebe broker with the Hazelcast exporter. The version of the exporter is defined in the `.env` file. 
@@ -70,10 +70,12 @@ docker-compose up
 1. Download the latest [Zeebe distribution](https://github.com/camunda-cloud/zeebe/releases) _(zeebe-distribution-%{VERSION}.tar.gz
 )_
 
+1. Download the latest [exporter JAR](https://github.com/camunda-community-hub/zeebe-hazelcast-exporter/releases) (_zeebe-hazelcast-exporter-1.0.1-jar-with-dependencies.jar_)
+
 1. Copy the exporter JAR  into the broker folder `~/zeebe-broker-%{VERSION}/exporters`.
 
     ```
-    cp exporter/target/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar ~/zeebe-broker-%{VERSION}/exporters/
+    cp exporter/target/zeebe-hazelcast-exporter-1.0.1-jar-with-dependencies.jar ~/zeebe-broker-%{VERSION}/exporters/
     ```
 
 1. Add the exporter to the broker configuration `~/zeebe-broker-%{VERSION}/config/application.yaml`:
@@ -84,7 +86,7 @@ docker-compose up
         exporters:
           hazelcast:
             className: io.zeebe.hazelcast.exporter.HazelcastExporter
-            jarPath: exporters/zeebe-hazelcast-exporter-%{VERSION}-jar-with-dependencies.jar
+            jarPath: exporters/zeebe-hazelcast-exporter-1.0.1-jar-with-dependencies.jar
     ```
 
 1. Start the broker
@@ -153,7 +155,7 @@ networks:
 services:
   zeebe:
     container_name: zeebe_broker
-    image: camunda/zeebe:1.0.0
+    image: camunda/zeebe:1.1.2
     environment:
       - ZEEBE_LOG_LEVEL=debug
       - ZEEBE_HAZELCAST_REMOTE_ADDRESS=hazelcast:5701
@@ -161,7 +163,7 @@ services:
       - "26500:26500"
       - "9600:9600"
     volumes:
-      - ../exporter/target/zeebe-hazelcast-exporter-${EXPORTER_VERSION}-jar-with-dependencies.jar:/usr/local/zeebe/exporters/zeebe-hazelcast-exporter.jar
+      - ../exporter/target/zeebe-hazelcast-exporter-1.0.1-jar-with-dependencies.jar:/usr/local/zeebe/exporters/zeebe-hazelcast-exporter.jar
       - ./application.yaml:/usr/local/zeebe/config/application.yaml
     networks:
       - zeebe_network
