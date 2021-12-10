@@ -18,7 +18,7 @@
     <properties>
         <version.zeebe>1.1.2</version.zeebe>
         <version.exporter.protobuf>1.0.0</version.exporter.protobuf>
-        <version.hazelcast>4.2.2</version.hazelcast>
+        <version.hazelcast>5.0</version.hazelcast>
         <version.log4j>2.15.0</version.log4j>
 
         <!-- release parent settings -->
