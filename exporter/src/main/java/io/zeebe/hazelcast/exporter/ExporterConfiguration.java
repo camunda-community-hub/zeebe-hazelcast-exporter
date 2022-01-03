@@ -10,6 +10,8 @@ public class ExporterConfiguration {
 
   private String remoteAddress;
 
+  private String clusterName = "dev";
+
   private String name = "zeebe";
 
   private int capacity = -1;
@@ -54,6 +56,10 @@ public class ExporterConfiguration {
             .filter(remoteAddress -> !remoteAddress.isEmpty());
   }
 
+  public String getClusterName() {
+    return getEnv("CLUSTER_NAME").orElse(clusterName);
+  }
+
   private Optional<String> getEnv(String name) {
     return Optional.ofNullable(System.getenv(ENV_PREFIX + name));
   }
@@ -61,21 +67,23 @@ public class ExporterConfiguration {
   @Override
   public String toString() {
     return "[port="
-            + port
-            + ", remoteAddress="
-            + remoteAddress
-            + ", name="
-            + name
-            + ", enabledValueTypes="
-            + enabledValueTypes
-            + ", enabledRecordTypes="
-            + enabledRecordTypes
-            + ", capacity="
-            + capacity
-            + ", timeToLiveInSeconds="
-            + timeToLiveInSeconds
-            + ", format="
-            + format
-            + "]";
+        + port
+        + ", remoteAddress="
+        + remoteAddress
+        + ", name="
+        + name
+        + ", clusterName="
+        + clusterName
+        + ", enabledValueTypes="
+        + enabledValueTypes
+        + ", enabledRecordTypes="
+        + enabledRecordTypes
+        + ", capacity="
+        + capacity
+        + ", timeToLiveInSeconds="
+        + timeToLiveInSeconds
+        + ", format="
+        + format
+        + "]";
   }
 }
