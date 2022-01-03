@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 public class ExporterRecordTest {
 
@@ -146,139 +147,145 @@ public class ExporterRecordTest {
     jobsResponse.getJobs().forEach(job -> client.newCompleteCommand(job.getKey()).send().join());
 
     // then
-    assertThat(deploymentRecords)
-        .hasSizeGreaterThanOrEqualTo(3)
-        .allSatisfy(
-            r ->
-                assertThat(r.getMetadata().getValueType())
-                    .isEqualTo(Schema.RecordMetadata.ValueType.DEPLOYMENT))
-        .extracting(r -> r.getMetadata().getIntent())
-        .contains("CREATE", "CREATED", "FULLY_DISTRIBUTED");
+    await()
+        .untilAsserted(
+            () -> {
+              assertThat(deploymentRecords)
+                  .hasSizeGreaterThanOrEqualTo(3)
+                  .allSatisfy(
+                      r ->
+                          assertThat(r.getMetadata().getValueType())
+                              .isEqualTo(Schema.RecordMetadata.ValueType.DEPLOYMENT))
+                  .extracting(r -> r.getMetadata().getIntent())
+                  .contains("CREATE", "CREATED", "FULLY_DISTRIBUTED");
 
-    assertThat(incidentRecords)
-        .hasSizeGreaterThanOrEqualTo(1)
-        .allSatisfy(
-            r ->
-                assertThat(r.getMetadata().getValueType())
-                    .isEqualTo(Schema.RecordMetadata.ValueType.INCIDENT))
-        .extracting(r -> r.getMetadata().getIntent())
-        .contains("CREATED");
+              assertThat(incidentRecords)
+                  .hasSizeGreaterThanOrEqualTo(1)
+                  .allSatisfy(
+                      r ->
+                          assertThat(r.getMetadata().getValueType())
+                              .isEqualTo(Schema.RecordMetadata.ValueType.INCIDENT))
+                  .extracting(r -> r.getMetadata().getIntent())
+                  .contains("CREATED");
 
-    assertThat(jobBatchRecords)
-        .hasSizeGreaterThanOrEqualTo(2)
-        .allSatisfy(
-            r ->
-                assertThat(r.getMetadata().getValueType())
-                    .isEqualTo(Schema.RecordMetadata.ValueType.JOB_BATCH))
-        .extracting(r -> r.getMetadata().getIntent())
-        .contains("ACTIVATE", "ACTIVATED");
+              assertThat(jobBatchRecords)
+                  .hasSizeGreaterThanOrEqualTo(2)
+                  .allSatisfy(
+                      r ->
+                          assertThat(r.getMetadata().getValueType())
+                              .isEqualTo(Schema.RecordMetadata.ValueType.JOB_BATCH))
+                  .extracting(r -> r.getMetadata().getIntent())
+                  .contains("ACTIVATE", "ACTIVATED");
 
-    assertThat(jobRecords)
-        .hasSizeGreaterThanOrEqualTo(2)
-        .allSatisfy(
-            r ->
-                assertThat(r.getMetadata().getValueType())
-                    .isEqualTo(Schema.RecordMetadata.ValueType.JOB))
-        .extracting(r -> r.getMetadata().getIntent())
-        .contains("CREATED", "COMPLETED");
+              assertThat(jobRecords)
+                  .hasSizeGreaterThanOrEqualTo(2)
+                  .allSatisfy(
+                      r ->
+                          assertThat(r.getMetadata().getValueType())
+                              .isEqualTo(Schema.RecordMetadata.ValueType.JOB))
+                  .extracting(r -> r.getMetadata().getIntent())
+                  .contains("CREATED", "COMPLETED");
 
-    assertThat(messageRecords)
-        .hasSizeGreaterThanOrEqualTo(2)
-        .allSatisfy(
-            r ->
-                assertThat(r.getMetadata().getValueType())
-                    .isEqualTo(Schema.RecordMetadata.ValueType.MESSAGE))
-        .extracting(r -> r.getMetadata().getIntent())
-        .contains("PUBLISH", "PUBLISHED");
+              assertThat(messageRecords)
+                  .hasSizeGreaterThanOrEqualTo(2)
+                  .allSatisfy(
+                      r ->
+                          assertThat(r.getMetadata().getValueType())
+                              .isEqualTo(Schema.RecordMetadata.ValueType.MESSAGE))
+                  .extracting(r -> r.getMetadata().getIntent())
+                  .contains("PUBLISH", "PUBLISHED");
 
-    assertThat(messageStartEventSubscriptionRecords)
-        .hasSizeGreaterThanOrEqualTo(1)
-        .allSatisfy(
-            r ->
-                assertThat(r.getMetadata().getValueType())
-                    .isEqualTo(Schema.RecordMetadata.ValueType.MESSAGE_START_EVENT_SUBSCRIPTION))
-        .extracting(r -> r.getMetadata().getIntent())
-        .contains("CREATED");
+              assertThat(messageStartEventSubscriptionRecords)
+                  .hasSizeGreaterThanOrEqualTo(1)
+                  .allSatisfy(
+                      r ->
+                          assertThat(r.getMetadata().getValueType())
+                              .isEqualTo(
+                                  Schema.RecordMetadata.ValueType.MESSAGE_START_EVENT_SUBSCRIPTION))
+                  .extracting(r -> r.getMetadata().getIntent())
+                  .contains("CREATED");
 
-    assertThat(messageSubscriptionRecords)
-        .hasSizeGreaterThanOrEqualTo(3)
-        .allSatisfy(
-            r ->
-                assertThat(r.getMetadata().getValueType())
-                    .isEqualTo(Schema.RecordMetadata.ValueType.MESSAGE_SUBSCRIPTION))
-        .extracting(r -> r.getMetadata().getIntent())
-        .contains("CREATED", "CORRELATING", "CORRELATED");
+              assertThat(messageSubscriptionRecords)
+                  .hasSizeGreaterThanOrEqualTo(3)
+                  .allSatisfy(
+                      r ->
+                          assertThat(r.getMetadata().getValueType())
+                              .isEqualTo(Schema.RecordMetadata.ValueType.MESSAGE_SUBSCRIPTION))
+                  .extracting(r -> r.getMetadata().getIntent())
+                  .contains("CREATED", "CORRELATING", "CORRELATED");
 
-    assertThat(processEventRecords)
-        .hasSizeGreaterThanOrEqualTo(2)
-        .allSatisfy(
-            r ->
-                assertThat(r.getMetadata().getValueType())
-                    .isEqualTo(Schema.RecordMetadata.ValueType.PROCESS_EVENT))
-        .extracting(r -> r.getMetadata().getIntent())
-        .contains("TRIGGERING", "TRIGGERED");
+              assertThat(processEventRecords)
+                  .hasSizeGreaterThanOrEqualTo(2)
+                  .allSatisfy(
+                      r ->
+                          assertThat(r.getMetadata().getValueType())
+                              .isEqualTo(Schema.RecordMetadata.ValueType.PROCESS_EVENT))
+                  .extracting(r -> r.getMetadata().getIntent())
+                  .contains("TRIGGERING", "TRIGGERED");
 
-    assertThat(processInstanceCreationRecords)
-        .hasSizeGreaterThanOrEqualTo(2)
-        .allSatisfy(
-            r ->
-                assertThat(r.getMetadata().getValueType())
-                    .isEqualTo(Schema.RecordMetadata.ValueType.PROCESS_INSTANCE_CREATION))
-        .extracting(r -> r.getMetadata().getIntent())
-        .contains("CREATE", "CREATED");
+              assertThat(processInstanceCreationRecords)
+                  .hasSizeGreaterThanOrEqualTo(2)
+                  .allSatisfy(
+                      r ->
+                          assertThat(r.getMetadata().getValueType())
+                              .isEqualTo(Schema.RecordMetadata.ValueType.PROCESS_INSTANCE_CREATION))
+                  .extracting(r -> r.getMetadata().getIntent())
+                  .contains("CREATE", "CREATED");
 
-    assertThat(processInstanceRecords)
-        .hasSizeGreaterThanOrEqualTo(3)
-        .allSatisfy(
-            r ->
-                assertThat(r.getMetadata().getValueType())
-                    .isEqualTo(Schema.RecordMetadata.ValueType.PROCESS_INSTANCE))
-        .extracting(r -> r.getMetadata().getIntent())
-        .contains("ACTIVATE_ELEMENT", "ELEMENT_ACTIVATING", "ELEMENT_ACTIVATED");
+              assertThat(processInstanceRecords)
+                  .hasSizeGreaterThanOrEqualTo(3)
+                  .allSatisfy(
+                      r ->
+                          assertThat(r.getMetadata().getValueType())
+                              .isEqualTo(Schema.RecordMetadata.ValueType.PROCESS_INSTANCE))
+                  .extracting(r -> r.getMetadata().getIntent())
+                  .contains("ACTIVATE_ELEMENT", "ELEMENT_ACTIVATING", "ELEMENT_ACTIVATED");
 
-    assertThat(processMessageSubscriptionRecords)
-        .hasSizeGreaterThanOrEqualTo(3)
-        .allSatisfy(
-            r ->
-                assertThat(r.getMetadata().getValueType())
-                    .isEqualTo(Schema.RecordMetadata.ValueType.PROCESS_MESSAGE_SUBSCRIPTION))
-        .extracting(r -> r.getMetadata().getIntent())
-        .contains("CREATING", "CREATED", "CORRELATED");
+              assertThat(processMessageSubscriptionRecords)
+                  .hasSizeGreaterThanOrEqualTo(2)
+                  .allSatisfy(
+                      r ->
+                          assertThat(r.getMetadata().getValueType())
+                              .isEqualTo(
+                                  Schema.RecordMetadata.ValueType.PROCESS_MESSAGE_SUBSCRIPTION))
+                  .extracting(r -> r.getMetadata().getIntent())
+                  .contains("CREATING", "CORRELATED");
 
-    assertThat(processRecords)
-        .hasSizeGreaterThanOrEqualTo(2)
-        .allSatisfy(
-            r ->
-                assertThat(r.getMetadata().getValueType())
-                    .isEqualTo(Schema.RecordMetadata.ValueType.PROCESS))
-        .extracting(r -> r.getMetadata().getIntent())
-        .contains("CREATED");
+              assertThat(processRecords)
+                  .hasSizeGreaterThanOrEqualTo(2)
+                  .allSatisfy(
+                      r ->
+                          assertThat(r.getMetadata().getValueType())
+                              .isEqualTo(Schema.RecordMetadata.ValueType.PROCESS))
+                  .extracting(r -> r.getMetadata().getIntent())
+                  .contains("CREATED");
 
-    assertThat(timerRecords)
-        .hasSizeGreaterThanOrEqualTo(1)
-        .allSatisfy(
-            r ->
-                assertThat(r.getMetadata().getValueType())
-                    .isEqualTo(Schema.RecordMetadata.ValueType.TIMER))
-        .extracting(r -> r.getMetadata().getIntent())
-        .contains("CREATED");
+              assertThat(timerRecords)
+                  .hasSizeGreaterThanOrEqualTo(1)
+                  .allSatisfy(
+                      r ->
+                          assertThat(r.getMetadata().getValueType())
+                              .isEqualTo(Schema.RecordMetadata.ValueType.TIMER))
+                  .extracting(r -> r.getMetadata().getIntent())
+                  .contains("CREATED");
 
-    assertThat(variableDocumentRecords)
-        .hasSizeGreaterThanOrEqualTo(1)
-        .allSatisfy(
-            r ->
-                assertThat(r.getMetadata().getValueType())
-                    .isEqualTo(Schema.RecordMetadata.ValueType.VARIABLE_DOCUMENT))
-        .extracting(r -> r.getMetadata().getIntent())
-        .contains("UPDATE", "UPDATED");
+              assertThat(variableDocumentRecords)
+                  .hasSizeGreaterThanOrEqualTo(1)
+                  .allSatisfy(
+                      r ->
+                          assertThat(r.getMetadata().getValueType())
+                              .isEqualTo(Schema.RecordMetadata.ValueType.VARIABLE_DOCUMENT))
+                  .extracting(r -> r.getMetadata().getIntent())
+                  .contains("UPDATE", "UPDATED");
 
-    assertThat(variableRecords)
-        .hasSizeGreaterThanOrEqualTo(2)
-        .allSatisfy(
-            r ->
-                assertThat(r.getMetadata().getValueType())
-                    .isEqualTo(Schema.RecordMetadata.ValueType.VARIABLE))
-        .extracting(r -> r.getMetadata().getIntent())
-        .contains("CREATED");
+              assertThat(variableRecords)
+                  .hasSizeGreaterThanOrEqualTo(2)
+                  .allSatisfy(
+                      r ->
+                          assertThat(r.getMetadata().getValueType())
+                              .isEqualTo(Schema.RecordMetadata.ValueType.VARIABLE))
+                  .extracting(r -> r.getMetadata().getIntent())
+                  .contains("CREATED");
+            });
   }
 }
