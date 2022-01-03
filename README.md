@@ -97,6 +97,7 @@ docker-compose up
 In the Zeebe configuration file, you can change 
 
 * the Hazelcast port
+* the Hazelcast cluster name
 * the value and record types which are exported
 * the ringbuffer's name
 * the ringbuffer's capacity
@@ -113,8 +114,11 @@ zeebe:
         className: io.zeebe.hazelcast.exporter.HazelcastExporter
         jarPath: exporters/zeebe-hazelcast-exporter.jar
 	args:
-	  # Hazelcast port
+	      # Hazelcast port
     	  port = 5701
+    	  
+    	  # Hazelcast cluster name
+    	  clusterName = "dev"
     
           # comma separated list of io.zeebe.protocol.record.ValueType to export or empty to export all types 
           enabledValueTypes = ""

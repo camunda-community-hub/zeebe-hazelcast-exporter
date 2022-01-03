@@ -84,10 +84,13 @@ public class HazelcastExporter implements Exporter {
 
   private HazelcastInstance createHazelcastInstance() {
     final var port = this.config.getPort();
+    final var clusterName = this.config.getClusterName();
 
     final var hzConfig = new Config();
     hzConfig.getNetworkConfig().setPort(port);
     hzConfig.setProperty("hazelcast.logging.type", "slf4j");
+
+    hzConfig.setClusterName(clusterName);
 
     final var ringbufferConfig = new RingbufferConfig(this.config.getName());
 
@@ -100,12 +103,16 @@ public class HazelcastExporter implements Exporter {
 
     hzConfig.addRingBufferConfig(ringbufferConfig);
 
-    logger.info("Creating new in-memory Hazelcast instance [port: {}]", port);
+    logger.info(
+        "Creating new in-memory Hazelcast instance [port: {}, cluster-name: {}]",
+        port,
+        clusterName);
 
     return Hazelcast.newHazelcastInstance(hzConfig);
   }
 
   private HazelcastInstance connectToHazelcast(String remoteAddress) {
+    final var clusterName = this.config.getClusterName();
 
     final var clientConfig = new ClientConfig();
     clientConfig.setProperty("hazelcast.logging.type", "slf4j");
@@ -113,7 +120,12 @@ public class HazelcastExporter implements Exporter {
     final var networkConfig = clientConfig.getNetworkConfig();
     networkConfig.addAddress(remoteAddress);
 
-    logger.info("Connecting to remote Hazelcast instance [address: {}]", remoteAddress);
+    clientConfig.setClusterName(clusterName);
+
+    logger.info(
+        "Connecting to remote Hazelcast instance [address: {}, cluster-name: {}]",
+        remoteAddress,
+        clusterName);
 
     return HazelcastClient.newHazelcastClient(clientConfig);
   }
