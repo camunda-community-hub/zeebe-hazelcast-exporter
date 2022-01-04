@@ -8,8 +8,6 @@ public class ExporterConfiguration {
 
   private int port = 5701;
 
-  private String remoteAddress;
-
   private String clusterName = "dev";
 
   private String name = "zeebe";
@@ -21,6 +19,9 @@ public class ExporterConfiguration {
 
   private String enabledValueTypes = "";
   private String enabledRecordTypes = "";
+
+  private String remoteAddress;
+  private String remoteConnectionTimeout = "PT30S";
 
   public int getPort() {
     return getEnv("PORT").map(Integer::parseInt).orElse(port);
@@ -60,6 +61,10 @@ public class ExporterConfiguration {
     return getEnv("CLUSTER_NAME").orElse(clusterName);
   }
 
+  public String getRemoteConnectionTimeout() {
+    return getEnv("REMOTE_CONNECTION_TIMEOUT").orElse(remoteConnectionTimeout);
+  }
+
   private Optional<String> getEnv(String name) {
     return Optional.ofNullable(System.getenv(ENV_PREFIX + name));
   }
@@ -84,6 +89,8 @@ public class ExporterConfiguration {
         + timeToLiveInSeconds
         + ", format="
         + format
+        + ", remoteConnectionTimeout="
+        + remoteConnectionTimeout
         + "]";
   }
 }

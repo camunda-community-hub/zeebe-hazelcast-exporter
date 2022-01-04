@@ -145,6 +145,30 @@ The values can be overridden by environment variables with the same name and a `
 
 By default, the exporter creates an in-memory Hazelcast instance and publishes the records to it. But it can also be configured to export the records to a remote/external Hazecast instance by setting the argument `remoteAddress` or the environment variable `ZEEBE_HAZELCAST_REMOTE_ADDRESS` to the address of the remote Hazelcast instance.
 
+* the remote Hazelcast address
+* the remote Hazelcast cluster name
+* the connection timeout
+
+Default values:
+
+```
+zeebe:
+  broker:
+    exporters:
+      hazelcast:
+        className: io.zeebe.hazelcast.exporter.HazelcastExporter
+        jarPath: exporters/zeebe-hazelcast-exporter.jar
+	args:
+	      # remote Hazelcast address
+    	  remoteAddress = 127.0.0.1:5702
+    	  
+    	  # Hazelcast cluster name
+    	  clusterName = "dev"
+    	  
+    	  # connection timeout
+    	  remoteConnectionTimeout = "PT30S"
+```
+
 <details>
   <summary>Full docker-compose.yml with external Hazelcast</summary>
   <p>
