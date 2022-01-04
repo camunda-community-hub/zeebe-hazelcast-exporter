@@ -15,6 +15,7 @@ import io.zeebe.exporter.proto.RecordTransformer;
 import io.zeebe.exporter.proto.Schema;
 import org.slf4j.Logger;
 
+import java.time.Duration;
 import java.util.function.Function;
 
 public class HazelcastExporter implements Exporter {
@@ -116,11 +117,15 @@ public class HazelcastExporter implements Exporter {
 
     final var clientConfig = new ClientConfig();
     clientConfig.setProperty("hazelcast.logging.type", "slf4j");
+    clientConfig.setClusterName(clusterName);
 
     final var networkConfig = clientConfig.getNetworkConfig();
     networkConfig.addAddress(remoteAddress);
 
-    clientConfig.setClusterName(clusterName);
+    final var connectionRetryConfig =
+        clientConfig.getConnectionStrategyConfig().getConnectionRetryConfig();
+    final var connectionTimeout = Duration.parse(this.config.getRemoteConnectionTimeout());
+    connectionRetryConfig.setClusterConnectTimeoutMillis(connectionTimeout.toMillis());
 
     logger.info(
         "Connecting to remote Hazelcast instance [address: {}, cluster-name: {}]",
