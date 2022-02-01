@@ -16,7 +16,7 @@
     </parent>
 
     <properties>
-        <version.zeebe>1.3.2</version.zeebe>
+        <version.zeebe>1.3.3</version.zeebe>
         <version.exporter.protobuf>1.1.0</version.exporter.protobuf>
         <version.hazelcast>5.0.2</version.hazelcast>
         <version.log4j>2.17.1</version.log4j>
