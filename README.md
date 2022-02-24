@@ -221,7 +221,8 @@ services:
 
 </p>
 </details>
-	
+
+Check out the Hazelcast documentation on how to [deploy](https://docs.hazelcast.com/hazelcast/5.0/deploy/deploying-in-kubernetes) and [configure](https://docs.hazelcast.com/hazelcast/5.0/deploy/configuring-kubernetes) Hazelcast on Kubernetes.
 
 ## Build it from Source
 
