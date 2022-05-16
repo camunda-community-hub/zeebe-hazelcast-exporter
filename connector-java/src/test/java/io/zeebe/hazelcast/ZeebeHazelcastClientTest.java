@@ -8,9 +8,9 @@ import com.hazelcast.core.HazelcastInstance;
 import io.zeebe.hazelcast.connect.java.ZeebeHazelcast;
 import io.zeebe.hazelcast.exporter.ExporterConfiguration;
 import org.awaitility.Awaitility;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 
@@ -26,7 +26,7 @@ public class ZeebeHazelcastClientTest {
   private HazelcastInstance hzInstance;
   private HazelcastInstance hzClient;
 
-  @Before
+  @BeforeEach
   public void init() {
     final Config config = new Config();
     config.getNetworkConfig().setPort(5702);
@@ -42,7 +42,7 @@ public class ZeebeHazelcastClientTest {
     hzClient = HazelcastClient.newHazelcastClient(clientConfig);
   }
 
-  @After
+  @AfterEach
   public void cleanUp() throws Exception {
     zeebeHazelcast.close();
     hzClient.shutdown();

@@ -6,23 +6,24 @@ import com.hazelcast.core.HazelcastInstance;
 import io.camunda.zeebe.client.ZeebeClient;
 import io.camunda.zeebe.model.bpmn.Bpmn;
 import io.camunda.zeebe.model.bpmn.BpmnModelInstance;
-import io.camunda.zeebe.test.ZeebeTestRule;
 import io.zeebe.exporter.proto.Schema;
 import io.zeebe.hazelcast.connect.java.ZeebeHazelcast;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import io.zeebe.hazelcast.testcontainers.ZeebeTestContainer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+@Testcontainers
 public class ExporterRecordTest {
 
   private static final BpmnModelInstance PROCESS =
@@ -45,9 +46,6 @@ public class ExporterRecordTest {
           .zeebeOutputExpression("x", "x")
           .endEvent()
           .done();
-
-  @Rule
-  public final ZeebeTestRule testRule = new ZeebeTestRule("application.yaml", Properties::new);
 
   private final List<Schema.DeploymentRecord> deploymentRecords = new ArrayList<>();
   private final List<Schema.IncidentRecord> incidentRecords = new ArrayList<>();
@@ -73,12 +71,15 @@ public class ExporterRecordTest {
   private HazelcastInstance hz;
   private ZeebeHazelcast zeebeHazelcast;
 
-  @Before
+  @Container
+  public ZeebeTestContainer zeebeContainer = new ZeebeTestContainer();
+
+  @BeforeEach
   public void init() {
-    client = testRule.getClient();
+    client = zeebeContainer.getClient();
 
     final ClientConfig clientConfig = new ClientConfig();
-    clientConfig.getNetworkConfig().addAddress("127.0.0.1:5701");
+    clientConfig.getNetworkConfig().addAddress(zeebeContainer.getHazelcastAddress());
     hz = HazelcastClient.newHazelcastClient(clientConfig);
 
     zeebeHazelcast =
@@ -101,7 +102,7 @@ public class ExporterRecordTest {
             .build();
   }
 
-  @After
+  @AfterEach
   public void cleanUp() throws Exception {
     zeebeHazelcast.close();
     hz.shutdown();
@@ -111,7 +112,7 @@ public class ExporterRecordTest {
   public void shouldExportRecords() {
     // given
     client
-        .newDeployCommand()
+        .newDeployResourceCommand()
         .addProcessModel(PROCESS, "process.bpmn")
         .addProcessModel(MESSAGE_PROCESS, "message-process.bpmn")
         .send()

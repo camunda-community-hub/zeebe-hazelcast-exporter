@@ -1,7 +1,0 @@
-zeebe:
-  broker:
-    exporters:
-      hazelcast:
-        className: io.zeebe.hazelcast.exporter.HazelcastExporter
-        args:
-          remoteAddress: 127.0.0.1:5702

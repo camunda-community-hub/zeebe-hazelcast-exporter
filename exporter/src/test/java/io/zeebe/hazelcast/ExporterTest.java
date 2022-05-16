@@ -4,21 +4,20 @@ import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.ringbuffer.Ringbuffer;
-import io.camunda.zeebe.client.ZeebeClient;
 import io.camunda.zeebe.model.bpmn.Bpmn;
 import io.camunda.zeebe.model.bpmn.BpmnModelInstance;
-import io.camunda.zeebe.test.ZeebeTestRule;
 import io.zeebe.exporter.proto.Schema;
 import io.zeebe.hazelcast.exporter.ExporterConfiguration;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
-import java.util.Properties;
+import io.zeebe.hazelcast.testcontainers.ZeebeTestContainer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Testcontainers
 public class ExporterTest {
 
   private static final BpmnModelInstance WORKFLOW =
@@ -32,22 +31,19 @@ public class ExporterTest {
 
   private static final ExporterConfiguration CONFIGURATION = new ExporterConfiguration();
 
-  @Rule
-  public final ZeebeTestRule testRule = new ZeebeTestRule("application.yaml", Properties::new);
+  @Container
+  public ZeebeTestContainer zeebeContainer = ZeebeTestContainer.withDefaultConfig();
 
-  private ZeebeClient client;
   private HazelcastInstance hz;
 
-  @Before
+  @BeforeEach
   public void init() {
-    client = testRule.getClient();
-
     final ClientConfig clientConfig = new ClientConfig();
-    clientConfig.getNetworkConfig().addAddress("127.0.0.1:5701");
+    clientConfig.getNetworkConfig().addAddress(zeebeContainer.getHazelcastAddress());
     hz = HazelcastClient.newHazelcastClient(clientConfig);
   }
 
-  @After
+  @AfterEach
   public void cleanUp() {
     hz.shutdown();
   }
@@ -60,7 +56,7 @@ public class ExporterTest {
     var sequence = buffer.headSequence();
 
     // when
-    client.newDeployCommand().addProcessModel(WORKFLOW, "process.bpmn").send().join();
+    zeebeContainer.getClient().newDeployResourceCommand().addProcessModel(WORKFLOW, "process.bpmn").send().join();
 
     // then
     final var message = buffer.readOne(sequence);

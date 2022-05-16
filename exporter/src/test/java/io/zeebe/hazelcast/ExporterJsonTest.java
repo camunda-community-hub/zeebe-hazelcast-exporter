@@ -4,74 +4,72 @@ import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.ringbuffer.Ringbuffer;
-import io.camunda.zeebe.client.ZeebeClient;
 import io.camunda.zeebe.model.bpmn.Bpmn;
 import io.camunda.zeebe.model.bpmn.BpmnModelInstance;
-import io.camunda.zeebe.test.ZeebeTestRule;
 import io.zeebe.hazelcast.exporter.ExporterConfiguration;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import io.zeebe.hazelcast.testcontainers.ZeebeTestContainer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.Properties;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Testcontainers
 public class ExporterJsonTest {
 
-  private static final BpmnModelInstance WORKFLOW =
-      Bpmn.createExecutableProcess("process")
-          .startEvent("start")
-          .sequenceFlowId("to-task")
-          .serviceTask("task", s -> s.zeebeJobType("test"))
-          .sequenceFlowId("to-end")
-          .endEvent("end")
-          .done();
+    private static final BpmnModelInstance WORKFLOW =
+            Bpmn.createExecutableProcess("process")
+                    .startEvent("start")
+                    .sequenceFlowId("to-task")
+                    .serviceTask("task", s -> s.zeebeJobType("test"))
+                    .sequenceFlowId("to-end")
+                    .endEvent("end")
+                    .done();
 
-  private static final ExporterConfiguration CONFIGURATION = new ExporterConfiguration();
+    private static final ExporterConfiguration CONFIGURATION = new ExporterConfiguration();
 
-  @Rule
-  public final ZeebeTestRule testRule = new ZeebeTestRule("application-json.yaml", Properties::new);
+    @Container
+    public ZeebeTestContainer zeebeContainer = ZeebeTestContainer.withJsonFormat();
 
-  private ZeebeClient client;
-  private HazelcastInstance hz;
+    private HazelcastInstance hz;
 
-  @Before
-  public void init() {
-    client = testRule.getClient();
+    @BeforeEach
+    public void init() {
+        final ClientConfig clientConfig = new ClientConfig();
+        clientConfig.getNetworkConfig().addAddress(zeebeContainer.getHazelcastAddress());
+        hz = HazelcastClient.newHazelcastClient(clientConfig);
+    }
 
-    final ClientConfig clientConfig = new ClientConfig();
-    clientConfig.getNetworkConfig().addAddress("127.0.0.1:5701");
-    hz = HazelcastClient.newHazelcastClient(clientConfig);
-  }
+    @AfterEach
+    public void cleanUp() {
+        hz.shutdown();
+    }
 
-  @After
-  public void cleanUp() {
-    hz.shutdown();
-  }
+    @Test
+    public void shouldExportEventsAsProtobuf() throws Exception {
+        // given
+        final Ringbuffer<byte[]> buffer = hz.getRingbuffer(CONFIGURATION.getName());
 
-  @Test
-  public void shouldExportEventsAsProtobuf() throws Exception {
-    // given
-    final Ringbuffer<byte[]> buffer = hz.getRingbuffer(CONFIGURATION.getName());
+        var sequence = buffer.headSequence();
 
-    var sequence = buffer.headSequence();
+        // when
+        zeebeContainer.getClient().newDeployResourceCommand().addProcessModel(WORKFLOW, "process.bpmn").send().join();
 
-    // when
-    client.newDeployCommand().addProcessModel(WORKFLOW, "process.bpmn").send().join();
+        // then
+        final var message = buffer.readOne(sequence);
+        assertThat(message).isNotNull();
 
-    // then
-    final var message = buffer.readOne(sequence);
-    assertThat(message).isNotNull();
+        final var jsonRecord = new String(message);
 
-    final var jsonRecord = new String(message);
-
-    assertThat(jsonRecord)
-        .startsWith("{")
-        .endsWith("}")
-        .contains("\"valueType\":\"DEPLOYMENT\"")
-        .contains("\"recordType\":\"COMMAND\"")
-        .contains("\"intent\":\"CREATE\"");
-  }
+        assertThat(jsonRecord)
+                .startsWith("{")
+                .endsWith("}")
+                .contains("\"valueType\":\"DEPLOYMENT\"")
+                .contains("\"recordType\":\"COMMAND\"")
+                .contains("\"intent\":\"CREATE\"");
+    }
 }
