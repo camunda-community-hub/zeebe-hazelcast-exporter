@@ -8,24 +8,25 @@ import io.camunda.zeebe.model.bpmn.Bpmn;
 import io.camunda.zeebe.model.bpmn.BpmnModelInstance;
 import io.camunda.zeebe.protocol.record.intent.DeploymentIntent;
 import io.camunda.zeebe.protocol.record.value.BpmnElementType;
-import io.camunda.zeebe.test.ZeebeTestRule;
 import io.zeebe.exporter.proto.Schema;
 import io.zeebe.hazelcast.connect.java.ZeebeHazelcast;
+import io.zeebe.hazelcast.testcontainers.ZeebeTestContainer;
 import org.awaitility.Awaitility;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Testcontainers
 public class ExporterTest {
 
   private static final BpmnModelInstance PROCESS =
@@ -37,23 +38,23 @@ public class ExporterTest {
           .endEvent("end")
           .done();
 
-  @Rule
-  public final ZeebeTestRule testRule = new ZeebeTestRule("application.yaml", Properties::new);
-
   private ZeebeClient client;
   private HazelcastInstance hz;
   private ZeebeHazelcast zeebeHazelcast;
 
-  @Before
+  @Container
+  public ZeebeTestContainer zeebeContainer = new ZeebeTestContainer();
+
+  @BeforeEach
   public void init() {
-    client = testRule.getClient();
+    client = zeebeContainer.getClient();
 
     final ClientConfig clientConfig = new ClientConfig();
-    clientConfig.getNetworkConfig().addAddress("127.0.0.1:5701");
+    clientConfig.getNetworkConfig().addAddress(zeebeContainer.getHazelcastAddress());
     hz = HazelcastClient.newHazelcastClient(clientConfig);
   }
 
-  @After
+  @AfterEach
   public void cleanUp() throws Exception {
     zeebeHazelcast.close();
     hz.shutdown();
@@ -74,7 +75,7 @@ public class ExporterTest {
     final var sequence1 = zeebeHazelcast.getSequence();
 
     // when
-    client.newDeployCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
+    client.newDeployResourceCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
 
     Awaitility.await("await until the deployment is fully distributed")
         .untilAsserted(
@@ -121,7 +122,7 @@ public class ExporterTest {
     final var initialSequence = zeebeHazelcast.getSequence();
 
     // when
-    client.newDeployCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
+    client.newDeployResourceCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
     client
         .newCreateInstanceCommand()
         .bpmnProcessId("process")
@@ -162,7 +163,7 @@ public class ExporterTest {
             .readFromHead()
             .build();
 
-    client.newDeployCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
+    client.newDeployResourceCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
 
     Awaitility.await("await until the deployment is fully distributed")
         .untilAsserted(
@@ -208,7 +209,7 @@ public class ExporterTest {
     zeebeHazelcast =
         ZeebeHazelcast.newBuilder(hz).addDeploymentListener(deploymentRecords::add).build();
 
-    client.newDeployCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
+    client.newDeployResourceCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
     Awaitility.await("await until the deployment is fully distributed")
         .untilAsserted(
             () ->
@@ -249,7 +250,7 @@ public class ExporterTest {
     zeebeHazelcast =
         ZeebeHazelcast.newBuilder(hz).addDeploymentListener(deploymentRecords::add).build();
 
-    client.newDeployCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
+    client.newDeployResourceCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
 
     Awaitility.await("await until the deployment is fully distributed")
         .untilAsserted(
