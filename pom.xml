@@ -24,7 +24,7 @@
         <version.junit>5.9.0</version.junit>
         <version.testcontainers>1.17.3</version.testcontainers>
 
-        <plugin.version.maven-jar>3.2.2</plugin.version.maven-jar>
+        <plugin.version.maven-jar>3.3.0</plugin.version.maven-jar>
 
         <!-- release parent settings -->
         <version.java>11</version.java>
