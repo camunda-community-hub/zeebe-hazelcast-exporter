@@ -43,6 +43,9 @@ public class ZeebeHazelcast implements AutoCloseable {
     RECORD_MESSAGE_TYPES.add(Schema.TimerRecord.class);
     RECORD_MESSAGE_TYPES.add(Schema.VariableRecord.class);
     RECORD_MESSAGE_TYPES.add(Schema.VariableDocumentRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.DecisionRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.DecisionRequirementsRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.DecisionEvaluationRecord.class);
   }
 
   private final Ringbuffer<byte[]> ringbuffer;
@@ -345,6 +348,23 @@ public class ZeebeHazelcast implements AutoCloseable {
 
     public Builder addErrorListener(Consumer<Schema.ErrorRecord> listener) {
       addListener(Schema.ErrorRecord.class, listener);
+      return this;
+    }
+
+    public Builder addDecisionListener(Consumer<Schema.DecisionRecord> listener) {
+      addListener(Schema.DecisionRecord.class, listener);
+      return this;
+    }
+
+    public Builder addDecisionRequirementsListener(
+        Consumer<Schema.DecisionRequirementsRecord> listener) {
+      addListener(Schema.DecisionRequirementsRecord.class, listener);
+      return this;
+    }
+
+    public Builder addDecisionEvaluationListener(
+        Consumer<Schema.DecisionEvaluationRecord> listener) {
+      addListener(Schema.DecisionEvaluationRecord.class, listener);
       return this;
     }
 
