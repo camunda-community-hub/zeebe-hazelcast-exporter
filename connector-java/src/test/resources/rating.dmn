@@ -38,7 +38,7 @@
     </decisionTable>
   </decision>
   <decision id="decision_b" name="Decision B">
-    <decisionTable id="DecisionTable_0ihx504">
+    <decisionTable id="DecisionTable_0ihx504" hitPolicy="FIRST">
       <input id="InputClause_11xz5ga" label="x">
         <inputExpression id="LiteralExpression_01im9ul" typeRef="number">
           <text>x</text>

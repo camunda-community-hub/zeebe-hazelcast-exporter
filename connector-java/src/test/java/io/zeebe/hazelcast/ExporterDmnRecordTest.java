@@ -11,6 +11,7 @@ import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
 import io.camunda.zeebe.client.ZeebeClient;
+import io.camunda.zeebe.model.bpmn.Bpmn;
 import io.zeebe.exporter.proto.Schema;
 import io.zeebe.hazelcast.connect.java.ZeebeHazelcast;
 import io.zeebe.hazelcast.testcontainers.ZeebeTestContainer;
@@ -21,6 +22,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -91,6 +93,48 @@ public final class ExporterDmnRecordTest {
                         record ->
                             record.getDecisionRequirementsMetadata().getDecisionRequirementsId())
                     .contains("Ratings");
+              });
+    }
+  }
+
+  @Test
+  void shouldExportDecisionEvaluationRecords() throws Exception {
+    final var decisionEvaluations = new ArrayList<Schema.DecisionEvaluationRecord>();
+    final var zeebeHazelcast =
+        createZeebeHazelcastClient()
+            .addDecisionEvaluationListener(decisionEvaluations::add)
+            .build();
+
+    try (zeebeHazelcast) {
+      ZEEBE_CLIENT
+          .newDeployResourceCommand()
+          .addResourceFromClasspath("rating.dmn")
+          .addProcessModel(
+              Bpmn.createExecutableProcess("process")
+                  .startEvent()
+                  .businessRuleTask(
+                      "task",
+                      t -> t.zeebeCalledDecisionId("decision_a").zeebeResultVariable("result"))
+                  .done(),
+              "process.bpmn")
+          .send()
+          .join();
+
+      ZEEBE_CLIENT
+          .newCreateInstanceCommand()
+          .bpmnProcessId("process")
+          .latestVersion()
+          .variables(Map.of("x", 7))
+          .send()
+          .join();
+
+      await()
+          .untilAsserted(
+              () -> {
+                assertThat(decisionEvaluations)
+                    .hasSize(1)
+                    .extracting(Schema.DecisionEvaluationRecord::getDecisionOutput)
+                    .contains("\"A+\"");
               });
     }
   }
