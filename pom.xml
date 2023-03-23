@@ -18,7 +18,7 @@
     <properties>
         <version.zeebe>8.2.0-alpha5</version.zeebe>
         <version.exporter.protobuf>1.4.0-alpha1</version.exporter.protobuf>
-        <version.hazelcast>5.2.2</version.hazelcast>
+        <version.hazelcast>5.2.3</version.hazelcast>
         <version.log4j>2.20.0</version.log4j>
         <version.zeebe.testcontainers>3.5.2</version.zeebe.testcontainers>
         <version.junit>5.9.2</version.junit>
