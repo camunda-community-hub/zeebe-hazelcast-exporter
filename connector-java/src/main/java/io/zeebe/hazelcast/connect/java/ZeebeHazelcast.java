@@ -46,6 +46,8 @@ public class ZeebeHazelcast implements AutoCloseable {
     RECORD_MESSAGE_TYPES.add(Schema.DecisionRecord.class);
     RECORD_MESSAGE_TYPES.add(Schema.DecisionRequirementsRecord.class);
     RECORD_MESSAGE_TYPES.add(Schema.DecisionEvaluationRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.SignalRecord.class);
+    RECORD_MESSAGE_TYPES.add(Schema.SignalSubscriptionRecord.class);
   }
 
   private final Ringbuffer<byte[]> ringbuffer;
@@ -365,6 +367,17 @@ public class ZeebeHazelcast implements AutoCloseable {
     public Builder addDecisionEvaluationListener(
         Consumer<Schema.DecisionEvaluationRecord> listener) {
       addListener(Schema.DecisionEvaluationRecord.class, listener);
+      return this;
+    }
+
+    public Builder addSignalListener(Consumer<Schema.SignalRecord> listener) {
+      addListener(Schema.SignalRecord.class, listener);
+      return this;
+    }
+
+    public Builder addSignalSubscriptionListener(
+        Consumer<Schema.SignalSubscriptionRecord> listener) {
+      addListener(Schema.SignalSubscriptionRecord.class, listener);
       return this;
     }
 
