@@ -21,7 +21,7 @@
         <version.log4j>2.20.0</version.log4j>
         <version.zeebe.testcontainers>3.5.2</version.zeebe.testcontainers>
         <version.junit>5.9.3</version.junit>
-        <version.testcontainers>1.17.6</version.testcontainers>
+        <version.testcontainers>1.18.3</version.testcontainers>
 
         <plugin.version.maven-jar>3.3.0</plugin.version.maven-jar>
 
