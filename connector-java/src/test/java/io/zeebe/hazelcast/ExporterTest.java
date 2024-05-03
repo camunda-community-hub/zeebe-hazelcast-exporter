@@ -77,12 +77,12 @@ public class ExporterTest {
     // when
     client.newDeployResourceCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
 
-    Awaitility.await("await until the deployment is fully distributed")
+    Awaitility.await("await until the deployment is created")
         .untilAsserted(
             () ->
                 assertThat(deploymentRecords)
                     .extracting(r -> r.getMetadata().getIntent())
-                    .contains(DeploymentIntent.FULLY_DISTRIBUTED.name()));
+                    .contains(DeploymentIntent.CREATED.name()));
 
     final var sequence2 = zeebeHazelcast.getSequence();
 
@@ -165,13 +165,13 @@ public class ExporterTest {
 
     client.newDeployResourceCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
 
-    Awaitility.await("await until the deployment is fully distributed")
+    Awaitility.await("await until the deployment is created")
         .untilAsserted(
             () ->
                 assertThat(deploymentRecords)
-                    .hasSize(3)
+                    .hasSize(2)
                     .extracting(r -> r.getMetadata().getIntent())
-                    .contains("CREATE", "CREATED", "FULLY_DISTRIBUTED"));
+                    .contains("CREATE", "CREATED"));
 
     zeebeHazelcast.close();
     deploymentRecords.clear();
@@ -195,9 +195,9 @@ public class ExporterTest {
 
     // then
     assertThat(deploymentRecords)
-        .hasSize(3)
+        .hasSize(2)
         .extracting(r -> r.getMetadata().getIntent())
-        .contains("CREATE", "CREATED", "FULLY_DISTRIBUTED");
+        .contains("CREATE", "CREATED");
   }
 
   @Test
@@ -210,12 +210,12 @@ public class ExporterTest {
         ZeebeHazelcast.newBuilder(hz).addDeploymentListener(deploymentRecords::add).build();
 
     client.newDeployResourceCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
-    Awaitility.await("await until the deployment is fully distributed")
+    Awaitility.await("await until the deployment is created")
         .untilAsserted(
             () ->
                 assertThat(deploymentRecords)
                     .extracting(r -> r.getMetadata().getIntent())
-                    .contains(DeploymentIntent.FULLY_DISTRIBUTED.name()));
+                    .contains(DeploymentIntent.CREATED.name()));
 
     zeebeHazelcast.close();
     deploymentRecords.clear();
@@ -252,12 +252,12 @@ public class ExporterTest {
 
     client.newDeployResourceCommand().addProcessModel(PROCESS, "process.bpmn").send().join();
 
-    Awaitility.await("await until the deployment is fully distributed")
+    Awaitility.await("await until the deployment is created")
         .untilAsserted(
             () ->
                 assertThat(deploymentRecords)
                     .extracting(r -> r.getMetadata().getIntent())
-                    .contains(DeploymentIntent.FULLY_DISTRIBUTED.name()));
+                    .contains(DeploymentIntent.CREATED.name()));
 
     final var sequence = zeebeHazelcast.getSequence();
 
