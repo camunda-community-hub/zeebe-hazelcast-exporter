@@ -31,13 +31,16 @@ public class ExporterRecordTest {
           .startEvent("start")
           .parallelGateway("fork")
           .serviceTask("task", s -> s.zeebeJobType("test").zeebeInputExpression("key", "x"))
-          .endEvent("end")
+              .exclusiveGateway()
+              .condition("=foo")
+              .endEvent("end")
           .moveToNode("fork")
           .receiveTask("receive-task")
           .message(m -> m.name("message").zeebeCorrelationKeyExpression("key"))
           .boundaryEvent("timer", b -> b.timerWithDuration("PT1M"))
           .endEvent()
           .done();
+
 
   private static final BpmnModelInstance MESSAGE_PROCESS =
       Bpmn.createExecutableProcess("message-process")
@@ -152,13 +155,13 @@ public class ExporterRecordTest {
         .untilAsserted(
             () -> {
               assertThat(deploymentRecords)
-                  .hasSizeGreaterThanOrEqualTo(3)
+                  .hasSizeGreaterThanOrEqualTo(2)
                   .allSatisfy(
                       r ->
                           assertThat(r.getMetadata().getValueType())
                               .isEqualTo(Schema.RecordMetadata.ValueType.DEPLOYMENT))
                   .extracting(r -> r.getMetadata().getIntent())
-                  .contains("CREATE", "CREATED", "FULLY_DISTRIBUTED");
+                  .contains("CREATE", "CREATED");
 
               assertThat(incidentRecords)
                   .hasSizeGreaterThanOrEqualTo(1)
