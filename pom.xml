@@ -16,7 +16,7 @@
 
     <properties>
         <version.zeebe>8.5.0</version.zeebe>
-        <version.exporter.protobuf>1.4.0</version.exporter.protobuf>
+        <version.exporter.protobuf>1.6.0</version.exporter.protobuf>
         <version.hazelcast>5.4.0</version.hazelcast>
         <version.log4j>2.23.1</version.log4j>
         <version.zeebe.testcontainers>3.6.3</version.zeebe.testcontainers>
