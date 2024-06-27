@@ -20,7 +20,7 @@
         <version.hazelcast>5.4.0</version.hazelcast>
         <version.log4j>2.23.1</version.log4j>
         <version.zeebe.testcontainers>3.6.3</version.zeebe.testcontainers>
-        <version.junit>5.10.2</version.junit>
+        <version.junit>5.10.3</version.junit>
         <version.testcontainers>1.19.8</version.testcontainers>
 
         <plugin.version.maven-jar>3.4.2</plugin.version.maven-jar>
