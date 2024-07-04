@@ -19,7 +19,7 @@
         <version.exporter.protobuf>1.6.1</version.exporter.protobuf>
         <version.hazelcast>5.4.0</version.hazelcast>
         <version.log4j>2.23.1</version.log4j>
-        <version.zeebe.testcontainers>3.6.3</version.zeebe.testcontainers>
+        <version.zeebe.testcontainers>3.6.5</version.zeebe.testcontainers>
         <version.junit>5.10.3</version.junit>
         <version.testcontainers>1.19.8</version.testcontainers>
 
